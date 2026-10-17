@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-anton), var(--font-inter), ui-sans-serif, sans-serif;
+  --color-ink: #000000;
+  --color-paper: #ffffff;
+  --color-ink-soft: #0a0a0a;
+  --color-paper-soft: #fafafa;
+  --color-accent: #f59e0b;
+  --color-accent-light: #fbbf24;
+  --color-accent-dark: #d97706;
+  --color-muted: #6b7280;
+  --color-faint: #9ca3af;
+  --color-line: #e5e7eb;
+  --color-line-dark: #1f2937;
+  --color-danger: #b91c1c;
+  --color-danger-soft: #fca5a5;
+  --color-ok: #15803d;
+  --color-ok-soft: #86efac;
+}
+
+html {
+  background: #ffffff;
+}
+
+html.dark {
+  background: #000000;
+}
+
+:focus-visible {
+  outline: 2px solid #f59e0b;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
