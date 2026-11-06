@@ -294,3 +294,17 @@ describe("limites persistíveis e isolamento do planejamento", () => {
     });
   });
 });
+
+describe("entradas financeiras e estado inconsistente", () => {
+  test.each(["-1", "NaN", "Infinity", "1e5", "1,001", "1.00", "999999999999999999999999"])("recusa valor inválido %s", (value) => {
+    expect(planNewInstallment(value, "2026-11-09", []).ok).toBe(false);
+  });
+  test("não ultrapassa INTEGER em sequência de parcela", () => {
+    expect(planNewInstallment("10", "2026-11-09", [2147483647]).ok).toBe(false);
+  });
+  test("não ocupa poltrona marcada ocupada com vínculo ausente", () => {
+    expect(planSeatChange([{ id: "s", excursionId: "t", status: "occupied", passengerId: null }],
+      [{ id: "p", excursionId: "t", status: "reserved" }],
+      { type: "assign", seatId: "s", passengerId: "p" }).ok).toBe(false);
+  });
+});

@@ -188,7 +188,7 @@ export function planSeatChange(
   if (target.passengerId === passenger.id) {
     return { ok: false, message: "Essa pessoa já está nesta poltrona." };
   }
-  if (target.passengerId) {
+  if (target.status !== "available" || target.passengerId) {
     return { ok: false, message: "Essa poltrona acabou de ser ocupada." };
   }
 
@@ -239,6 +239,9 @@ export function planNewInstallment(
   if (!money.ok) return money;
   const day = calendarDay(dueDate);
   if (!day) return { ok: false, message: "Informe o vencimento." };
+  if (sequences.some((value) => !Number.isInteger(value) || value < 1 || value >= 2_147_483_647)) {
+    return { ok: false, message: "Sequência de parcelas inválida ou esgotada." };
+  }
   const sequence = sequences.length === 0 ? 1 : Math.max(...sequences) + 1;
   return { ok: true, amountCents: money.cents, dueDate: day, sequence };
 }

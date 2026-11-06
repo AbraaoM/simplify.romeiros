@@ -45,8 +45,8 @@ const EXCURSION_STATUSES: ExcursionStatus[] = [
 const DOCUMENT_TYPES: DocumentType[] = ["cpf", "rg", "passport", "other"];
 
 async function load() {
-  if (!getSql()) return { ok: false as const, message: DB_OFF };
   try {
+    if (!getSql()) return { ok: false as const, message: DB_OFF };
     return { ok: true as const, data: await readAgencyFromDatabase() };
   } catch {
     console.error("Falha ao ler o banco.");
