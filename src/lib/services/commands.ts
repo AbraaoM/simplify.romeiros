@@ -27,7 +27,7 @@ import {
 } from "@/lib/repositories/commands";
 import { getSql } from "@/lib/db/client";
 
-export type ServiceResult<T extends Record<string, unknown> = Record<string, never>> =
+export type ServiceResult<T extends Record<string, unknown> = Record<never, never>> =
   | ({ ok: true } & T)
   | { ok: false; message: string };
 
