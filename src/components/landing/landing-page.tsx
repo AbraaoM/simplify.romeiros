@@ -129,9 +129,9 @@ function Section({
     >
       <div className="mx-auto w-full max-w-[1120px] px-5 py-16 lg:px-8 lg:py-24">
         {eyebrow ? (
-          <p className="text-sm text-muted dark:text-faint">{eyebrow}</p>
+          <p className="mb-3 text-sm text-muted dark:text-faint">{eyebrow}</p>
         ) : null}
-        <h2 className="max-w-3xl font-display text-4xl leading-[0.95] sm:text-5xl">
+        <h2 className="max-w-3xl font-display text-4xl leading-[1.1] sm:text-5xl">
           {title}
         </h2>
         <div className="mt-10">{children}</div>
@@ -145,7 +145,7 @@ function Hero() {
     <section className="bg-paper dark:bg-ink">
       <div className="mx-auto w-full max-w-[1120px] px-5 py-16 lg:px-8 lg:py-28">
         <p className="text-sm text-muted dark:text-faint">{NAME}</p>
-        <h1 className="mt-4 max-w-4xl font-display text-4xl leading-[0.95] sm:text-6xl lg:text-7xl">
+        <h1 className="mt-4 max-w-4xl font-display text-4xl leading-[1.1] sm:text-6xl lg:text-7xl">
           Parcelas, poltronas e quartos da excursão num lugar só, sem caderno e
           sem planilha.
         </h1>
@@ -200,7 +200,7 @@ function Features() {
   return (
     <Section
       id="recursos"
-      eyebrow="Versão em lançamento: estamos liberando por etapas, com quem testar junto"
+      eyebrow="Versão em lançamento"
       title="O que a primeira versão entrega no dia a dia."
       tone="soft"
     >
@@ -306,7 +306,7 @@ function FinalCta() {
   return (
     <section className="bg-ink text-paper dark:bg-paper dark:text-ink">
       <div className="mx-auto flex w-full max-w-[1120px] flex-col items-start gap-8 px-5 py-16 lg:px-8 lg:py-24">
-        <h2 className="max-w-3xl font-display text-4xl leading-[0.95] sm:text-6xl">
+        <h2 className="max-w-3xl font-display text-4xl leading-[1.1] sm:text-6xl">
           Comece pelos {PRICING.trialDays} dias grátis.
         </h2>
         <p className="max-w-xl text-lg text-faint dark:text-muted">

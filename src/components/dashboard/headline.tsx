@@ -21,7 +21,7 @@ export function Headline({ headline }: { headline: DashboardHeadline }) {
   if (headline.kind === "next_departure") {
     return (
       <div>
-        <h1 className="font-display text-5xl leading-[0.9] sm:text-7xl">
+        <h1 className="font-display text-5xl leading-[1.1] sm:text-7xl">
           {headline.destination}
         </h1>
         <p className="mt-3 text-lg">
@@ -33,7 +33,7 @@ export function Headline({ headline }: { headline: DashboardHeadline }) {
 
   return (
     <div>
-      <h1 className="max-w-md font-display text-5xl leading-[0.9] sm:text-6xl">
+      <h1 className="max-w-md font-display text-5xl leading-[1.1] sm:text-6xl">
         Nenhuma excursão aberta.
       </h1>
       <p className="mt-4 max-w-md text-muted dark:text-faint">

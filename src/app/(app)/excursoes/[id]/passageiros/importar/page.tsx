@@ -28,7 +28,7 @@ export default async function ImportPassengersPage({
   return (
     <article>
       <p className="text-sm text-muted dark:text-faint">{result.data.destination}</p>
-      <h1 className="mt-2 font-display text-5xl leading-[0.9]">Importar CSV</h1>
+      <h1 className="mt-2 font-display text-5xl leading-[1.1]">Importar CSV</h1>
       <ImportPassengersForm excursionId={id} />
       <p className="mt-8">
         <Link href={`/excursoes/${id}`} className="inline-flex min-h-11 items-center">

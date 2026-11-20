@@ -8,7 +8,7 @@ export default function ErrorPage({
 }) {
   return (
     <div>
-      <h1 className="max-w-md font-display text-5xl leading-[0.9]">
+      <h1 className="max-w-md font-display text-5xl leading-[1.1]">
         Não foi possível abrir esta página.
       </h1>
       <p className="mt-4 text-muted dark:text-faint">Tente de novo em instantes.</p>
