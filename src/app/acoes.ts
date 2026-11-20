@@ -19,6 +19,7 @@ import {
   updatePassenger,
 } from "@/lib/services/commands";
 import {
+  idleCreateInviteState,
   idleImportState,
   type CreateInviteState,
   type ExportPassengerState,
