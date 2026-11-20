@@ -12,7 +12,7 @@ export default async function PendenciasPage() {
 
   return (
     <div>
-      <h1 className="font-display text-5xl leading-[0.9] sm:text-6xl">Pendências</h1>
+      <h1 className="font-display text-5xl leading-[1.1] sm:text-6xl">Pendências</h1>
       <p className="mt-3 text-muted dark:text-faint">
         Parcelas atrasadas e as que vencem nos próximos 7 dias.
       </p>

@@ -12,7 +12,7 @@ export function TripList({ trips }: { trips: TripSummary[] }) {
             href={`/excursoes/${trip.id}`}
             className="block py-5 transition-colors duration-300 hover:bg-paper-soft dark:hover:bg-ink-soft"
           >
-            <span className="block font-display text-4xl leading-[0.9]">
+            <span className="block font-display text-4xl leading-[1.1]">
               {trip.destination}
             </span>
             <span className="mt-2 block text-sm text-muted dark:text-faint">

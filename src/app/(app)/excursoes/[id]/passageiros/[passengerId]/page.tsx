@@ -49,7 +49,7 @@ export default async function PassengerFilePage({
   return (
     <article>
       <p className="text-sm text-muted dark:text-faint">{file.destination}</p>
-      <h1 className="mt-2 font-display text-5xl leading-[0.9]">{passenger.fullName}</h1>
+      <h1 className="mt-2 font-display text-5xl leading-[1.1]">{passenger.fullName}</h1>
       <p className="mt-3">
         {file.seatNumber ? `Poltrona ${file.seatNumber}` : "Sem poltrona"}
       </p>

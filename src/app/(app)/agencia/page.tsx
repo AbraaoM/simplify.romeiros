@@ -20,7 +20,7 @@ export default async function AgencyPage() {
   const agency = loaded.data.agency;
   return (
     <article>
-      <h1 className="font-display text-5xl leading-[0.9]">
+      <h1 className="font-display text-5xl leading-[1.1]">
         {agency ? agency.name : "Sua agência"}
       </h1>
       <AgencyForm

@@ -20,7 +20,7 @@ export default async function NewExcursionPage() {
   if (!loaded.data.agency) {
     return (
       <article>
-        <h1 className="font-display text-5xl leading-[0.9]">Nova excursão</h1>
+        <h1 className="font-display text-5xl leading-[1.1]">Nova excursão</h1>
         <p className="mt-4">Cadastre a agência antes de abrir uma excursão.</p>
         <p className="mt-6">
           <Link href="/agencia" className="inline-flex min-h-11 items-center">
@@ -33,7 +33,7 @@ export default async function NewExcursionPage() {
 
   return (
     <article>
-      <h1 className="font-display text-5xl leading-[0.9]">Nova excursão</h1>
+      <h1 className="font-display text-5xl leading-[1.1]">Nova excursão</h1>
       <NewExcursionForm />
     </article>
   );

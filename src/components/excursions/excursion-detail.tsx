@@ -21,7 +21,7 @@ export function ExcursionDetail({
       <p className="text-sm text-muted dark:text-faint">
         {EXCURSION_STATUS_LABEL[view.status]}
       </p>
-      <h1 className="mt-2 font-display text-5xl leading-[0.9] sm:text-7xl">
+      <h1 className="mt-2 font-display text-5xl leading-[1.1] sm:text-7xl">
         {view.destination}
       </h1>
       <p className="mt-3">

@@ -29,7 +29,7 @@ export default async function SeatPage({
   return (
     <article>
       <p className="text-sm text-muted dark:text-faint">{page.destination}</p>
-      <h1 className="mt-2 font-display text-5xl leading-[0.9]">
+      <h1 className="mt-2 font-display text-5xl leading-[1.1]">
         Poltrona {page.seat.seatNumber}
       </h1>
       <p className="mt-3">

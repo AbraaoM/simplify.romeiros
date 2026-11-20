@@ -22,7 +22,7 @@ export function AuthShell({
         </div>
       </header>
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-5 py-12">
-        <h1 className="font-display text-5xl leading-[0.9]">{title}</h1>
+        <h1 className="font-display text-5xl leading-[1.1]">{title}</h1>
         <p className="mt-4 text-muted dark:text-faint">{description}</p>
         <div className="mt-8">{children}</div>
       </main>
