@@ -9,6 +9,7 @@ import {
   insertAgencyInvite,
   listAgencyInvites,
   listAgencyMembers,
+  revokePendingInvite,
   revokeStaffMembership,
   type AgencyInviteRow,
   type AgencyMemberRow,
@@ -105,6 +106,25 @@ export async function revokeStaff(userId: string): Promise<ServiceResult> {
     const context = await resolveTenantContext();
     requireOwner(context);
     const revoked = await revokeStaffMembership(context, userId);
+    if (!revoked) {
+      return { ok: false, message: NOT_FOUND };
+    }
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function revokeInvite(inviteId: string): Promise<ServiceResult> {
+  try {
+    const context = await resolveTenantContext();
+    requireOwner(context);
+    if (!UUID_RE.test(inviteId)) {
+      return { ok: false, message: NOT_FOUND };
+    }
+    const revoked = await revokePendingInvite(context, inviteId);
     if (!revoked) {
       return { ok: false, message: NOT_FOUND };
     }

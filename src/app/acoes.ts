@@ -29,7 +29,7 @@ import {
   anonymizePassenger,
   exportPassengerData,
 } from "@/lib/services/lgpd";
-import { createStaffInvite, revokeStaff } from "@/lib/services/staff";
+import { createStaffInvite, revokeInvite, revokeStaff } from "@/lib/services/staff";
 
 function text(formData: FormData, name: string): string {
   const value = formData.get(name);
@@ -344,4 +344,14 @@ export async function revokeStaffAction(
   if (!result.ok) return { message: result.message };
   refresh();
   return { message: "Vínculo revogado." };
+}
+
+export async function revokeInviteAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const result = await revokeInvite(text(formData, "inviteId"));
+  if (!result.ok) return { message: result.message };
+  refresh();
+  return { message: "Convite revogado." };
 }

@@ -329,4 +329,38 @@ describe.skipIf(!enabled)("integração LGPD e staff (Postgres)", () => {
 
     void tripB;
   }, 60_000);
+
+  test("revogar convite: só o dono da agência, só pendente, token deixa de valer", async () => {
+    await resetDatabase();
+    agencyA = await seedOwner("Dona A", "Agência A");
+    agencyB = await seedOwner("Dona B", "Agência B");
+    const staff = await import("@/lib/services/staff");
+    const invites = await import("@/lib/repositories/invites");
+
+    actAs(agencyA, "owner");
+    const created = await staff.createStaffInvite("Agência A");
+    if (!created.ok) throw new Error("invite");
+    const listed = await staff.loadStaffAdmin();
+    if (!listed.ok) throw new Error("list");
+    const inviteId = listed.invites[0]!.id;
+
+    actAs(agencyB, "owner");
+    const cross = await staff.revokeInvite(inviteId);
+    expect(cross.ok).toBe(false);
+
+    actAs(agencyA, "staff");
+    const asStaff = await staff.revokeInvite(inviteId);
+    expect(asStaff.ok).toBe(false);
+
+    actAs(agencyA, "owner");
+    const bad = await staff.revokeInvite("não-é-uuid");
+    expect(bad.ok).toBe(false);
+    const ok = await staff.revokeInvite(inviteId);
+    expect(ok.ok).toBe(true);
+    const again = await staff.revokeInvite(inviteId);
+    expect(again.ok).toBe(false);
+
+    const preview = await invites.peekInvitePreview(created.token);
+    expect(preview.ok).toBe(false);
+  }, 60_000);
 });
