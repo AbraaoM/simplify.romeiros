@@ -5,6 +5,20 @@ const nextConfig: NextConfig = {
   // Cache Components stay off until a later pass designs the static shell.
   cacheComponents: false,
   partialPrefetching: false,
+  // No subdomínio público do produto, a raiz mostra a landing.
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: "/",
+          has: [{ type: "host", value: "caravaneiro.abraaomoreira.dev" }],
+          destination: "/landing",
+        },
+      ],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
   turbopack: {
     rules: {
       "*.css": {
