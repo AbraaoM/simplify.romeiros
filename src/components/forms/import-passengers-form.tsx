@@ -4,8 +4,8 @@ import { useActionState } from "react";
 import {
   importPassengersAction,
   previewPassengerCsvAction,
-  idleImportState,
 } from "@/app/acoes";
+import { idleImportState } from "@/app/import-state";
 import { FormError, SubmitButton } from "./fields";
 
 const fileControl =

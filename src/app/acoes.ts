@@ -18,7 +18,7 @@ import {
   updateExcursion,
   updatePassenger,
 } from "@/lib/services/commands";
-import type { CsvPassengerRow } from "@/lib/domain/csv-passengers";
+import { idleImportState, type ImportActionState } from "./import-state";
 
 function text(formData: FormData, name: string): string {
   const value = formData.get(name);
@@ -215,20 +215,6 @@ export async function cancelPassengerAction(
   redirect(`/excursoes/${excursionId}`);
 }
 
-
-export type ImportActionState = {
-  message: string | null;
-  rows: CsvPassengerRow[] | null;
-  errorCount: number;
-  imported: number | null;
-};
-
-export const idleImportState: ImportActionState = {
-  message: null,
-  rows: null,
-  errorCount: 0,
-  imported: null,
-};
 
 async function readCsvUpload(
   formData: FormData,
