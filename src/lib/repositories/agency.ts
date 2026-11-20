@@ -77,7 +77,7 @@ export async function readAgencyFromDatabase(
     sql`
       select p.id, p.excursion_id, p.boarding_point_id, p.full_name, p.document_type,
              p.document_number, p.document_issuer, p.phone, p.email, p.status,
-             p.notes, p.created_at, p.updated_at
+             p.notes, p.anonymized_at, p.created_at, p.updated_at
       from passengers p
       join excursions e on e.id = p.excursion_id
       where e.agency_id = ${agencyId}
@@ -200,6 +200,7 @@ function mapPassenger(row: Row): Passenger {
     email: nullableText(row.email),
     status: text(row.status) as PassengerStatus,
     notes: nullableText(row.notes),
+    anonymizedAt: row.anonymized_at == null ? null : timestamp(row.anonymized_at),
     createdAt: timestamp(row.created_at),
     updatedAt: timestamp(row.updated_at),
   };

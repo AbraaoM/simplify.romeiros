@@ -62,3 +62,22 @@ function cnpjDigit(digits: string, weights: number[]): string {
   const remainder = sum % 11;
   return remainder < 2 ? "0" : String(11 - remainder);
 }
+
+/**
+ * Máscara padrão de CPF na interface: mostra só os dois últimos dígitos.
+ * Listas oficiais (ANTT) continuam usando formatDocument, sem máscara.
+ */
+export function maskCpf(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length !== 11) return "***";
+  return `***.***.***-${digits.slice(9)}`;
+}
+
+export function formatDocumentMasked(
+  type: string,
+  value: string | null,
+): string {
+  if (!value) return "Documento não informado";
+  if (type === "cpf") return maskCpf(value);
+  return value;
+}

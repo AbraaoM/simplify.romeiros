@@ -3,7 +3,7 @@ import { cache } from "react";
 import { headers } from "next/headers";
 import { getAuth, isAuthConfigured } from "@/lib/auth/server";
 import { getSql } from "@/lib/db/client";
-import { SecurityError } from "./errors";
+import { OWNER_ONLY, SecurityError } from "./errors";
 
 const BRAND = Symbol("tenant-context");
 
@@ -136,3 +136,11 @@ export const resolveTenantContext = cache(async (): Promise<TenantContext> => {
     role,
   });
 });
+
+export function requireOwner(context: TenantContext): TenantContext {
+  const verified = assertTenantContext(context);
+  if (verified.role !== "owner") {
+    throw new SecurityError("forbidden", OWNER_ONLY);
+  }
+  return verified;
+}

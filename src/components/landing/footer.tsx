@@ -31,6 +31,12 @@ export function LandingFooter() {
           >
             Privacidade
           </Link>
+          <Link
+            href="/termos"
+            className="inline-flex min-h-11 items-center text-sm text-muted dark:text-faint"
+          >
+            Termos
+          </Link>
         </nav>
       </div>
     </footer>

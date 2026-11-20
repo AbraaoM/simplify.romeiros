@@ -86,6 +86,7 @@ function people(
     email: null,
     status: spec.status ?? "confirmed",
     notes: null,
+    anonymizedAt: null,
     createdAt: STAMP,
     updatedAt: STAMP,
   }));

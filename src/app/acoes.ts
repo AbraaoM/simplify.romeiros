@@ -19,6 +19,11 @@ import {
   updatePassenger,
 } from "@/lib/services/commands";
 import { idleImportState, type ImportActionState } from "./import-state";
+import {
+  anonymizePassenger,
+  exportPassengerData,
+} from "@/lib/services/lgpd";
+import { createStaffInvite, revokeStaff } from "@/lib/services/staff";
 
 function text(formData: FormData, name: string): string {
   const value = formData.get(name);
@@ -266,4 +271,95 @@ export async function importPassengersAction(
   if (!result.ok) return { ...idleImportState, message: result.message };
   refresh(excursionId);
   redirect(`/excursoes/${excursionId}`);
+}
+
+export type ExportPassengerState = {
+  message: string | null;
+  file: { filename: string; mime: string; content: string } | null;
+};
+
+export const idleExportPassengerState: ExportPassengerState = {
+  message: null,
+  file: null,
+};
+
+export async function exportPassengerAction(
+  _prev: ExportPassengerState,
+  formData: FormData,
+): Promise<ExportPassengerState> {
+  const excursionId = text(formData, "excursionId");
+  const passengerId = text(formData, "passengerId");
+  const result = await exportPassengerData({
+    excursionId,
+    passengerId,
+    format: text(formData, "format") === "csv" ? "csv" : "json",
+    confirmed: formData.get("confirm") === "yes",
+  });
+  if (!result.ok) return { message: result.message, file: null };
+  return {
+    message: "Arquivo pronto para baixar.",
+    file: {
+      filename: result.filename,
+      mime: result.mime,
+      content: result.content,
+    },
+  };
+}
+
+export async function anonymizePassengerAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const excursionId = text(formData, "excursionId");
+  const passengerId = text(formData, "passengerId");
+  const result = await anonymizePassenger({
+    excursionId,
+    passengerId,
+    confirmed: formData.get("confirm") === "yes",
+  });
+  if (!result.ok) return { message: result.message };
+  refresh(excursionId);
+  redirect(`/excursoes/${excursionId}/passageiros/${passengerId}`);
+}
+
+export type CreateInviteState = {
+  message: string | null;
+  url: string | null;
+  whatsappUrl: string | null;
+  expiresAt: string | null;
+};
+
+export const idleCreateInviteState: CreateInviteState = {
+  message: null,
+  url: null,
+  whatsappUrl: null,
+  expiresAt: null,
+};
+
+export async function createStaffInviteAction(
+  _prev: CreateInviteState,
+  formData: FormData,
+): Promise<CreateInviteState> {
+  const agencyName = text(formData, "agencyName");
+  const result = await createStaffInvite(agencyName);
+  if (!result.ok) {
+    return { ...idleCreateInviteState, message: result.message };
+  }
+  refresh();
+  return {
+    message: "Convite criado. Compartilhe o link pelo WhatsApp. Ele aparece só desta vez.",
+    url: result.url,
+    whatsappUrl: result.whatsappUrl,
+    expiresAt: result.expiresAt,
+  };
+}
+
+export async function revokeStaffAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const result = await revokeStaff(text(formData, "userId"));
+  if (!result.ok) return { message: result.message };
+  refresh();
+  return { message: "Vínculo revogado." };
 }

@@ -123,3 +123,13 @@ export function useFormAction(
 ) {
   return useActionState(action, idleActionState);
 }
+
+export function useStatefulFormAction<T>(
+  action: (prev: T, formData: FormData) => Promise<T>,
+  initial: T,
+) {
+  return useActionState<T, FormData>(
+    action as (state: T, payload: FormData) => Promise<T>,
+    initial as Awaited<T>,
+  );
+}

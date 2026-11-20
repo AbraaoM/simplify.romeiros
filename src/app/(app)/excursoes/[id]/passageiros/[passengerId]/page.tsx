@@ -9,8 +9,10 @@ import { StandingMark } from "@/components/ui/standing-mark";
 import { ErrorState } from "@/components/ui/error-state";
 import { paymentStanding } from "@/lib/domain/payment-standing";
 import { formatDayMonth, todayInBrazil } from "@/lib/domain/dates";
-import { formatDocument } from "@/lib/format/document";
+import { formatDocumentMasked } from "@/lib/format/document";
 import { formatBrl } from "@/lib/format/money";
+import { AnonymizePassengerForm, ExportPassengerForm } from "@/components/forms/lgpd-forms";
+import { resolveTenantContext } from "@/lib/security/context";
 import { getPassengerFile } from "@/lib/services/queries";
 import type { Installment } from "@/lib/domain/types";
 import type { PassengerFile } from "@/lib/services/views";
@@ -43,7 +45,12 @@ export default async function PassengerFilePage({
   if (!result.data) notFound();
 
   const file = result.data;
-  const writable = result.source === "database" && file.passenger.status !== "cancelled";
+  const context = await resolveTenantContext();
+  const isOwner = context.role === "owner";
+  const anonymized = Boolean(file.passenger.anonymizedAt);
+  const canAccount =
+    result.source === "database" && file.passenger.status !== "cancelled";
+  const writable = canAccount && !anonymized;
   const passenger = file.passenger;
 
   return (
@@ -54,8 +61,9 @@ export default async function PassengerFilePage({
         {file.seatNumber ? `Poltrona ${file.seatNumber}` : "Sem poltrona"}
       </p>
       <p className="mt-1 text-sm text-muted dark:text-faint">
-        {formatDocument(passenger.documentType, passenger.documentNumber)}
+        {formatDocumentMasked(passenger.documentType, passenger.documentNumber)}
       </p>
+      {anonymized ? <p className="mt-4">Anonimizado</p> : null}
       {passenger.status === "cancelled" ? <p className="mt-4">Cancelado</p> : null}
 
       <h2 className="mt-10 font-display text-3xl leading-none">Parcelas</h2>
@@ -78,7 +86,8 @@ export default async function PassengerFilePage({
                 <PendingPix
                   file={file}
                   installmentId={installment.id}
-                  writable={writable}
+                  writable={canAccount}
+                  canEditPixKey={isOwner}
                   excursionId={id}
                   passengerId={passengerId}
                   isPrimary={installment.id === file.pendingInstallmentId}
@@ -89,9 +98,12 @@ export default async function PassengerFilePage({
         </ul>
       )}
 
+      {canAccount ? (
+        <InstallmentForm excursionId={id} passengerId={passengerId} />
+      ) : null}
+
       {writable ? (
         <>
-          <InstallmentForm excursionId={id} passengerId={passengerId} />
           <PassengerEditForm
             excursionId={id}
             points={file.boardingPoints.map((point) => ({
@@ -112,6 +124,13 @@ export default async function PassengerFilePage({
         </>
       ) : null}
 
+      {result.source === "database" ? (
+        <ExportPassengerForm excursionId={id} passengerId={passengerId} />
+      ) : null}
+      {result.source === "database" && isOwner && !anonymized ? (
+        <AnonymizePassengerForm excursionId={id} passengerId={passengerId} />
+      ) : null}
+
       <p className="mt-8">
         <Link href={`/excursoes/${id}`} className="inline-flex min-h-11 items-center">
           Voltar à excursão
@@ -125,6 +144,7 @@ function PendingPix({
   file,
   installmentId,
   writable,
+  canEditPixKey,
   excursionId,
   passengerId,
   isPrimary,
@@ -132,6 +152,7 @@ function PendingPix({
   file: PassengerFile;
   installmentId: string;
   writable: boolean;
+  canEditPixKey: boolean;
   excursionId: string;
   passengerId: string;
   isPrimary: boolean;
@@ -145,7 +166,7 @@ function PendingPix({
           message={charge.whatsappMessage}
           phone={file.passenger.phone}
         />
-      ) : writable ? (
+      ) : writable && canEditPixKey ? (
         <p className="mt-3 text-sm text-muted dark:text-faint">
           Para gerar o Pix copia e cola,{" "}
           <Link href="/agencia" className="underline">

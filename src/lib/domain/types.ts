@@ -97,6 +97,7 @@ export type Passenger = {
   email: string | null;
   status: PassengerStatus;
   notes: string | null;
+  anonymizedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };

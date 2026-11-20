@@ -21,10 +21,12 @@ import {
 } from "@/lib/domain/csv-passengers";
 import type { DocumentType, ExcursionStatus, PixKeyType } from "@/lib/domain/types";
 import { readAgencyFromDatabase } from "@/lib/repositories/agency";
-import { resolveTenantContext } from "@/lib/security/context";
+import { insertAuditLog } from "@/lib/repositories/audit";
+import { resolveTenantContext, requireOwner } from "@/lib/security/context";
 import {
   DB_OFF,
   NOT_FOUND,
+  OWNER_ONLY,
   RecordNotFound,
   SAVE_FAILED,
   SESSION_REQUIRED,
@@ -80,6 +82,9 @@ function deny(error: unknown): { ok: false; message: string } {
     if (error.code === "database") {
       return { ok: false, message: DB_OFF };
     }
+    if (error.code === "forbidden") {
+      return { ok: false, message: error.message || OWNER_ONLY };
+    }
     return { ok: false, message: SESSION_REQUIRED };
   }
   console.error("Falha ao ler o banco.");
@@ -119,6 +124,7 @@ export async function saveAgency(input: {
   const loaded = await load();
   if (!loaded.ok) return loaded;
   try {
+    requireOwner(loaded.context);
     await saveAgencyRecord(loaded.context, {
       name: name.name,
       phone: blank(input.phone),
@@ -377,6 +383,11 @@ export async function markPaid(input: {
     if (!saved) {
       return { ok: false, message: "Só uma parcela pendente pode ser marcada como paga." };
     }
+    await insertAuditLog(loaded.context, {
+      action: "mark_paid",
+      entity: "installment",
+      entityId: input.installmentId,
+    });
     return { ok: true };
   } catch (error) {
     return fail(error);
@@ -542,6 +553,12 @@ export async function importPassengers(input: {
     const ids = await importPassengerRecords(loaded.context, {
       excursionId: input.excursionId,
       records: preview.records,
+    });
+    await insertAuditLog(loaded.context, {
+      action: "import_csv",
+      entity: "excursion",
+      entityId: input.excursionId,
+      payload: { count: ids.length },
     });
     return { ok: true, count: ids.length };
   } catch (error) {

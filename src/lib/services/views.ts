@@ -71,6 +71,7 @@ export type PassengerRow = {
   nextAmountCents: number | null;
   nextDueDate: string | null;
   status: PassengerStatus;
+  anonymizedAt: string | null;
 };
 
 export type SeatView = Seat & {
@@ -462,6 +463,7 @@ function toPassengerRow(
     nextAmountCents: next?.amountCents ?? null,
     nextDueDate: next?.dueDate ?? null,
     status: passenger.status,
+    anonymizedAt: passenger.anonymizedAt,
   };
 }
 
