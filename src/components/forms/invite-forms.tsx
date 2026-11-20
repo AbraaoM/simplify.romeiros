@@ -2,6 +2,7 @@
 
 import {
   createStaffInviteAction,
+  revokeInviteAction,
   revokeStaffAction,
 } from "@/app/acoes";
 import { idleCreateInviteState } from "@/app/import-state";
@@ -57,6 +58,19 @@ export function RevokeStaffForm({
       <FormError message={state.message} />
       <SubmitButton pending={pending} tone="plain" pendingLabel="Revogando.">
         {`Revogar ${name}`}
+      </SubmitButton>
+    </form>
+  );
+}
+
+export function RevokeInviteForm({ inviteId }: { inviteId: string }) {
+  const [state, action, pending] = useFormAction(revokeInviteAction);
+  return (
+    <form action={action} className="mt-2">
+      <input type="hidden" name="inviteId" value={inviteId} />
+      <FormError message={state.message} />
+      <SubmitButton pending={pending} tone="plain" pendingLabel="Revogando.">
+        Revogar convite
       </SubmitButton>
     </form>
   );

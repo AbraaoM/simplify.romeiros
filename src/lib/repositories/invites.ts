@@ -184,6 +184,22 @@ export async function revokeStaffMembership(
   return rows.length > 0;
 }
 
+export async function revokePendingInvite(
+  context: TenantContext,
+  inviteId: string,
+): Promise<boolean> {
+  const verified = requireOwner(context);
+  const sql = sqlOrThrow();
+  const rows = (await sql`
+    delete from agency_invites
+    where id = ${inviteId}::uuid
+      and agency_id = ${verified.agencyId}
+      and accepted_at is null
+    returning id
+  `) as Array<{ id: string }>;
+  return rows.length > 0;
+}
+
 /**
  * Accepts an invite for a validated session subject. This path does not use
  * resolveTenantContext because the invitee has no membership yet.

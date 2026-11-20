@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { AgencyForm } from "@/components/forms/agency-form";
-import { CreateInviteForm, RevokeStaffForm } from "@/components/forms/invite-forms";
+import { CreateInviteForm, RevokeInviteForm, RevokeStaffForm } from "@/components/forms/invite-forms";
 import { ErrorState } from "@/components/ui/error-state";
 import { loadAgencyData } from "@/lib/db/source";
 import { INVITE_TTL_DAYS } from "@/lib/domain/invites";
@@ -104,6 +104,9 @@ export default async function AgencyPage() {
                   ? ` · aceito em ${formatDayMonth(calendarDateInBrazil(invite.acceptedAt))}`
                   : ""}
               </p>
+              {invite.status === "pending" ? (
+                <RevokeInviteForm inviteId={invite.id} />
+              ) : null}
             </li>
           ))}
         </ul>
