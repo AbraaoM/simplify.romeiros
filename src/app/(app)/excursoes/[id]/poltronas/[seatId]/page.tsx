@@ -4,10 +4,11 @@ import { notFound } from "next/navigation";
 import { ReleaseSeatForm, SeatAssignForm } from "@/components/forms/seat-form";
 import { ErrorState } from "@/components/ui/error-state";
 import { getSeatPage } from "@/lib/services/queries";
+import { NAME } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Poltrona — Simplify" };
+export const metadata: Metadata = { title: `Poltrona — ${NAME}` };
 
 export default async function SeatPage({
   params,

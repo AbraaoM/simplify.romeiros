@@ -12,6 +12,7 @@ import { formatDocument } from "@/lib/format/document";
 import { formatBrl } from "@/lib/format/money";
 import { getPassengerFile } from "@/lib/services/queries";
 import type { Installment } from "@/lib/domain/types";
+import { NAME } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export async function generateMetadata({
   const { id, passengerId } = await params;
   const result = await getPassengerFile(id, passengerId);
   const name = result.ok ? result.data?.passenger.fullName : null;
-  return { title: name ? `${name} — Simplify` : "Passageiro — Simplify" };
+  return { title: name ? `${name} — ${NAME}` : `Passageiro — ${NAME}` };
 }
 
 export default async function PassengerFilePage({

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ExcursionDetail } from "@/components/excursions/excursion-detail";
 import { ErrorState } from "@/components/ui/error-state";
+import { NAME } from "@/lib/brand";
 import { getExcursionView } from "@/lib/services/queries";
 
 export const dynamic = "force-dynamic";
@@ -13,8 +14,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const result = await getExcursionView(id);
-  if (!result.ok || !result.data) return { title: "Excursão — Simplify" };
-  return { title: `${result.data.destination} — Simplify` };
+  if (!result.ok || !result.data) return { title: `Excursão — ${NAME}` };
+  return { title: `${result.data.destination} — ${NAME}` };
 }
 
 export default async function ExcursionPage({

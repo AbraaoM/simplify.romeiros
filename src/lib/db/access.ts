@@ -1,8 +1,7 @@
 /**
- * Bloqueio temporário: ainda não existe integração de sessão verificada nem
- * escopo de agência em todas as queries. Nenhum header/body/env libera DB.
- * Remover apenas junto da integração completa descrita em docs/security-context.md.
+ * O gate fail-closed temporário (requireDatabaseAccess) foi substituído pelo
+ * contrato em docs/security-context.md: toda leitura e escrita de dados da
+ * agência passa por resolveTenantContext() — sessão Better Auth validada e
+ * exatamente um vínculo ativo. getSql() só constrói o cliente; não autoriza.
  */
-export function requireDatabaseAccess(): never {
-  throw new Error("Acesso ao banco bloqueado: sessão e escopo de agência não integrados.");
-}
+export {};

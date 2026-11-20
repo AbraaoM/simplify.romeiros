@@ -12,6 +12,16 @@ import {
 } from "@/lib/domain/commands";
 import type { DocumentType, ExcursionStatus } from "@/lib/domain/types";
 import { readAgencyFromDatabase } from "@/lib/repositories/agency";
+import { resolveTenantContext } from "@/lib/security/context";
+import {
+  DB_OFF,
+  NOT_FOUND,
+  RecordNotFound,
+  SAVE_FAILED,
+  SESSION_REQUIRED,
+  SecurityError,
+  isSecurityError,
+} from "@/lib/security/errors";
 import {
   WriteConflict,
   applySeatChange,
@@ -25,14 +35,9 @@ import {
   updateExcursionRecord,
   updatePassengerRecord,
 } from "@/lib/repositories/commands";
-import { getSql } from "@/lib/db/client";
-
 export type ServiceResult<T extends Record<string, unknown> = Record<never, never>> =
   | ({ ok: true } & T)
   | { ok: false; message: string };
-
-const SAVE_FAILED = "Não foi possível salvar. Tente de novo.";
-const DB_OFF = "O banco não está ligado.";
 
 const EXCURSION_STATUSES: ExcursionStatus[] = [
   "draft",
@@ -46,17 +51,40 @@ const DOCUMENT_TYPES: DocumentType[] = ["cpf", "rg", "passport", "other"];
 
 async function load() {
   try {
-    if (!getSql()) return { ok: false as const, message: DB_OFF };
-    return { ok: true as const, data: await readAgencyFromDatabase() };
-  } catch {
-    console.error("Falha ao ler o banco.");
-    return { ok: false as const, message: SAVE_FAILED };
+    const context = await resolveTenantContext();
+    return {
+      ok: true as const,
+      context,
+      data: await readAgencyFromDatabase(context),
+    };
+  } catch (error) {
+    return deny(error);
   }
 }
 
+function deny(error: unknown): { ok: false; message: string } {
+  if (error instanceof SecurityError) {
+    if (error.code === "unauthenticated" || error.code === "unconfigured") {
+      return { ok: false, message: SESSION_REQUIRED };
+    }
+    if (error.code === "database") {
+      return { ok: false, message: DB_OFF };
+    }
+    return { ok: false, message: SESSION_REQUIRED };
+  }
+  console.error("Falha ao ler o banco.");
+  return { ok: false, message: SAVE_FAILED };
+}
+
 function fail(error: unknown): { ok: false; message: string } {
+  if (error instanceof RecordNotFound) {
+    return { ok: false, message: NOT_FOUND };
+  }
   if (error instanceof WriteConflict) {
     return { ok: false, message: "Não foi possível lançar a parcela. Tente de novo." };
+  }
+  if (isSecurityError(error)) {
+    return deny(error);
   }
   console.error("Falha ao gravar no banco.");
   return { ok: false, message: SAVE_FAILED };
@@ -72,7 +100,7 @@ export async function saveAgency(input: {
   const loaded = await load();
   if (!loaded.ok) return loaded;
   try {
-    await saveAgencyRecord({
+    await saveAgencyRecord(loaded.context, {
       name: name.name,
       phone: blank(input.phone),
       city: blank(input.city),
@@ -104,8 +132,7 @@ export async function createExcursion(input: {
     return { ok: false, message: "Cadastre a agência antes de abrir uma excursão." };
   }
   try {
-    const id = await insertExcursion({
-      agencyId: loaded.data.agency.id,
+    const id = await insertExcursion(loaded.context, {
       destination: destination.name,
       originCity: blank(input.originCity),
       departureAt: schedule.departureAt,
@@ -138,10 +165,10 @@ export async function updateExcursion(input: {
   const loaded = await load();
   if (!loaded.ok) return loaded;
   if (!loaded.data.excursions.some((item) => item.id === input.id)) {
-    return { ok: false, message: "Essa excursão não está na lista." };
+    return { ok: false, message: NOT_FOUND };
   }
   try {
-    await updateExcursionRecord({
+    await updateExcursionRecord(loaded.context, {
       id: input.id,
       destination: destination.name,
       originCity: blank(input.originCity),
@@ -164,7 +191,7 @@ export async function addBoardingPoint(input: {
   const loaded = await load();
   if (!loaded.ok) return loaded;
   if (!loaded.data.excursions.some((item) => item.id === input.excursionId)) {
-    return { ok: false, message: "Essa excursão não está na lista." };
+    return { ok: false, message: NOT_FOUND };
   }
   const names = loaded.data.boardingPoints
     .filter((point) => point.excursionId === input.excursionId)
@@ -173,7 +200,7 @@ export async function addBoardingPoint(input: {
     return { ok: false, message: "Esse ponto de embarque já existe." };
   }
   try {
-    await insertBoardingPoint(input.excursionId, name.name);
+    await insertBoardingPoint(loaded.context, input.excursionId, name.name);
     return { ok: true };
   } catch (error) {
     return fail(error);
@@ -200,15 +227,15 @@ export async function createPassenger(input: {
   if (!installment.ok) return installment;
   const loaded = await load();
   if (!loaded.ok) return loaded;
+  if (!loaded.data.excursions.some((item) => item.id === input.excursionId)) {
+    return { ok: false, message: NOT_FOUND };
+  }
   const point = boardingPoint(loaded.data.boardingPoints, input.excursionId, input.boardingPointId);
   if (point === "invalid") {
     return { ok: false, message: "Escolha um ponto de embarque desta excursão." };
   }
-  if (!loaded.data.excursions.some((item) => item.id === input.excursionId)) {
-    return { ok: false, message: "Essa excursão não está na lista." };
-  }
   try {
-    const id = await insertPassengerRecord({
+    const id = await insertPassengerRecord(loaded.context, {
       excursionId: input.excursionId,
       fullName: fullName.name,
       phone: blank(input.phone),
@@ -244,7 +271,7 @@ export async function updatePassenger(input: {
   const passenger = loaded.data.passengers.find(
     (item) => item.id === input.passengerId && item.excursionId === input.excursionId,
   );
-  if (!passenger) return { ok: false, message: "Esse passageiro não está nesta excursão." };
+  if (!passenger) return { ok: false, message: NOT_FOUND };
   if (passenger.status === "cancelled") {
     return { ok: false, message: "Esse passageiro já está cancelado." };
   }
@@ -253,7 +280,7 @@ export async function updatePassenger(input: {
     return { ok: false, message: "Escolha um ponto de embarque desta excursão." };
   }
   try {
-    await updatePassengerRecord({
+    await updatePassengerRecord(loaded.context, {
       id: input.passengerId,
       excursionId: input.excursionId,
       fullName: fullName.name,
@@ -280,7 +307,8 @@ export async function addInstallment(input: {
   const passenger = loaded.data.passengers.find(
     (item) => item.id === input.passengerId && item.excursionId === input.excursionId,
   );
-  if (!passenger || passenger.status === "cancelled") {
+  if (!passenger) return { ok: false, message: NOT_FOUND };
+  if (passenger.status === "cancelled") {
     return { ok: false, message: "Esse passageiro não está nesta excursão." };
   }
   const sequences = loaded.data.installments
@@ -289,7 +317,7 @@ export async function addInstallment(input: {
   const planned = planNewInstallment(input.amount, input.dueDate, sequences);
   if (!planned.ok) return planned;
   try {
-    await insertInstallmentRecord({
+    await insertInstallmentRecord(loaded.context, {
       passengerId: input.passengerId,
       excursionId: input.excursionId,
       sequence: planned.sequence,
@@ -319,6 +347,7 @@ export async function markPaid(input: {
   if (!planned.ok) return planned;
   try {
     const saved = await markInstallmentPaid(
+      loaded.context,
       input.installmentId,
       input.passengerId,
       input.excursionId,
@@ -352,7 +381,7 @@ export async function assignSeat(input: {
   const release = planned.writes.find((write) => write.status === "available");
   const occupy = planned.writes.find((write) => write.status === "occupied");
   try {
-    const saved = await applySeatChange({
+    const saved = await applySeatChange(loaded.context, {
       excursionId: input.excursionId,
       passengerId: input.passengerId,
       releaseSeatId: release?.seatId ?? null,
@@ -385,7 +414,7 @@ export async function releaseSeat(input: {
     return { ok: false, message: "Essa poltrona já está livre." };
   }
   try {
-    const saved = await applySeatChange({
+    const saved = await applySeatChange(loaded.context, {
       excursionId: input.excursionId,
       passengerId: seat.passengerId,
       releaseSeatId: input.seatId,
@@ -416,7 +445,7 @@ export async function cancelPassenger(input: {
   const planned = planCancelPassenger(passenger, seats);
   if (!planned.ok) return planned;
   try {
-    const saved = await cancelPassengerRecord({
+    const saved = await cancelPassengerRecord(loaded.context, {
       excursionId: input.excursionId,
       passengerId: input.passengerId,
       seatId: planned.seatIdToRelease,

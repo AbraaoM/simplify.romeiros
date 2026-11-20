@@ -137,6 +137,7 @@ function agency(): AgencyData {
       phone: null,
       city: "Taubaté",
       notes: null,
+      trialEndsAt: "2026-11-20T00:00:00.000Z",
       createdAt: "",
       updatedAt: "",
     },

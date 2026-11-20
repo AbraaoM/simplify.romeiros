@@ -47,6 +47,7 @@ export type Agency = {
   phone: string | null;
   city: string | null;
   notes: string | null;
+  trialEndsAt: string;
   createdAt: string;
   updatedAt: string;
 };

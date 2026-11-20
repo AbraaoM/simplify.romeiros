@@ -338,6 +338,7 @@ export function buildExample(today: string): AgencyData {
       phone: "12999990000",
       city: "Taubaté",
       notes: null,
+      trialEndsAt: STAMP,
       createdAt: STAMP,
       updatedAt: STAMP,
     },

@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { AgencyForm } from "@/components/forms/agency-form";
 import { ErrorState } from "@/components/ui/error-state";
-import { todayInBrazil } from "@/lib/domain/dates";
 import { loadAgencyData } from "@/lib/db/source";
+import { NAME } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Agência — Simplify" };
+export const metadata: Metadata = { title: `Agência — ${NAME}` };
 
 export default async function AgencyPage() {
-  const loaded = await loadAgencyData(todayInBrazil());
+  const loaded = await loadAgencyData();
   if (!loaded.ok) {
     return <ErrorState message="Não foi possível carregar a agência." />;
   }

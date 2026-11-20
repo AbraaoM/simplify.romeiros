@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Anton, Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/shell/theme-provider";
+import { NAME } from "@/lib/brand";
 import "./globals.css";
 
 const anton = Anton({
@@ -15,7 +16,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Simplify",
+  title: NAME,
   description: "Parcelas, poltronas e quartos da excursão num lugar só.",
 };
 

@@ -1,5 +1,9 @@
 import "server-only";
 import { getSql } from "@/lib/db/client";
+import {
+  assertTenantContext,
+  type TenantContext,
+} from "@/lib/security/context";
 import type {
   Agency,
   AgencyData,
@@ -23,23 +27,26 @@ import type {
 
 type Row = Record<string, unknown>;
 
-export async function readAgencyFromDatabase(): Promise<AgencyData> {
+export async function readAgencyFromDatabase(
+  context: TenantContext,
+): Promise<AgencyData> {
+  const scoped = assertTenantContext(context);
   const sql = getSql();
   if (!sql) {
     throw new Error("DATABASE_URL ausente");
   }
 
+  const agencyId = scoped.agencyId;
+
   const agencies = (await sql`
-    select id, name, phone, city, notes, created_at, updated_at
+    select id, name, phone, city, notes, trial_ends_at, created_at, updated_at
     from agencies
-    order by created_at asc
+    where id = ${agencyId}
     limit 1
   `) as Row[];
 
   const agencyRow = agencies[0];
   if (!agencyRow) return emptyData();
-
-  const agencyId = text(agencyRow.id);
 
   const [
     excursionRows,
@@ -139,6 +146,7 @@ function mapAgency(row: Row): Agency {
     phone: nullableText(row.phone),
     city: nullableText(row.city),
     notes: nullableText(row.notes),
+    trialEndsAt: timestamp(row.trial_ends_at),
     createdAt: timestamp(row.created_at),
     updatedAt: timestamp(row.updated_at),
   };

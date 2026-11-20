@@ -17,7 +17,7 @@ import {
 export async function getDashboard(
   today = todayInBrazil(),
 ): Promise<LoadResult<Dashboard>> {
-  const loaded = await loadAgencyData(today);
+  const loaded = await loadAgencyData();
   if (!loaded.ok) return loaded;
   return {
     ok: true,
@@ -29,7 +29,7 @@ export async function getDashboard(
 export async function listDueAttention(
   today = todayInBrazil(),
 ): Promise<LoadResult<AttentionItem[]>> {
-  const loaded = await loadAgencyData(today);
+  const loaded = await loadAgencyData();
   if (!loaded.ok) return loaded;
   return {
     ok: true,
@@ -43,7 +43,8 @@ export async function getPassengerFile(
   passengerId: string,
   today = todayInBrazil(),
 ): Promise<LoadResult<PassengerFile | null>> {
-  const loaded = await loadAgencyData(today);
+  void today;
+  const loaded = await loadAgencyData();
   if (!loaded.ok) return loaded;
   return {
     ok: true,
@@ -57,7 +58,8 @@ export async function getSeatPage(
   seatId: string,
   today = todayInBrazil(),
 ): Promise<LoadResult<SeatPage | null>> {
-  const loaded = await loadAgencyData(today);
+  void today;
+  const loaded = await loadAgencyData();
   if (!loaded.ok) return loaded;
   return {
     ok: true,
@@ -70,7 +72,7 @@ export async function getExcursionView(
   id: string,
   today = todayInBrazil(),
 ): Promise<LoadResult<ExcursionView | null>> {
-  const loaded = await loadAgencyData(today);
+  const loaded = await loadAgencyData();
   if (!loaded.ok) return loaded;
   return {
     ok: true,
