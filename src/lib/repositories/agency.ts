@@ -18,11 +18,13 @@ import type {
   PaymentMethod,
   Room,
   RoomAssignment,
+  PixKeyType,
   RoomType,
   Seat,
   SeatPosition,
   SeatSide,
   SeatStatus,
+  VehicleLayout,
 } from "@/lib/domain/types";
 
 type Row = Record<string, unknown>;
@@ -39,7 +41,7 @@ export async function readAgencyFromDatabase(
   const agencyId = scoped.agencyId;
 
   const agencies = (await sql`
-    select id, name, phone, city, notes, trial_ends_at, created_at, updated_at
+    select id, name, phone, city, notes, pix_key, pix_key_type, trial_ends_at, created_at, updated_at
     from agencies
     where id = ${agencyId}
     limit 1
@@ -59,7 +61,7 @@ export async function readAgencyFromDatabase(
   ] = await Promise.all([
     sql`
       select id, agency_id, destination, origin_city, departure_at, return_at,
-             vehicle_capacity, vehicle_label, status, notes, created_at, updated_at
+             vehicle_capacity, vehicle_label, vehicle_layout, status, notes, created_at, updated_at
       from excursions
       where agency_id = ${agencyId}
       order by departure_at asc
@@ -146,6 +148,8 @@ function mapAgency(row: Row): Agency {
     phone: nullableText(row.phone),
     city: nullableText(row.city),
     notes: nullableText(row.notes),
+    pixKey: nullableText(row.pix_key),
+    pixKeyType: row.pix_key_type == null ? null : (text(row.pix_key_type) as PixKeyType),
     trialEndsAt: timestamp(row.trial_ends_at),
     createdAt: timestamp(row.created_at),
     updatedAt: timestamp(row.updated_at),
@@ -162,6 +166,7 @@ function mapExcursion(row: Row): Excursion {
     returnAt: row.return_at == null ? null : timestamp(row.return_at),
     vehicleCapacity: number(row.vehicle_capacity),
     vehicleLabel: nullableText(row.vehicle_label),
+    vehicleLayout: text(row.vehicle_layout) as VehicleLayout,
     status: text(row.status) as ExcursionStatus,
     notes: nullableText(row.notes),
     createdAt: timestamp(row.created_at),

@@ -13,6 +13,10 @@ import {
   type PassengerFile,
   type SeatPage,
 } from "./views";
+import {
+  passengerExportRows,
+  type PassengerExportRow,
+} from "@/lib/domain/export-lists";
 
 export async function getDashboard(
   today = todayInBrazil(),
@@ -78,5 +82,34 @@ export async function getExcursionView(
     ok: true,
     source: loaded.source,
     data: projectExcursion(loaded.data, id, today),
+  };
+}
+
+
+export async function getPassengerExport(
+  excursionId: string,
+): Promise<LoadResult<{
+  destination: string;
+  departureAt: string;
+  rows: PassengerExportRow[];
+} | null>> {
+  const loaded = await loadAgencyData();
+  if (!loaded.ok) return loaded;
+  const excursion = loaded.data.excursions.find((item) => item.id === excursionId);
+  if (!excursion) {
+    return { ok: true, source: loaded.source, data: null };
+  }
+  return {
+    ok: true,
+    source: loaded.source,
+    data: {
+      destination: excursion.destination,
+      departureAt: excursion.departureAt,
+      rows: passengerExportRows(
+        loaded.data.passengers.filter((item) => item.excursionId === excursionId),
+        loaded.data.seats.filter((item) => item.excursionId === excursionId),
+        loaded.data.boardingPoints.filter((item) => item.excursionId === excursionId),
+      ),
+    },
   };
 }

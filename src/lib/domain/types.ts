@@ -9,9 +9,9 @@ export type PassengerStatus = "reserved" | "confirmed" | "cancelled";
 
 export type SeatStatus = "available" | "occupied" | "blocked";
 
-export type SeatSide = "left" | "right";
+export type SeatSide = "left" | "right" | "center";
 
-export type SeatPosition = "window" | "aisle";
+export type SeatPosition = "window" | "aisle" | "middle";
 
 export type InstallmentStatus = "pending" | "paid" | "waived" | "cancelled";
 
@@ -27,7 +27,11 @@ export type DocumentType = "cpf" | "rg" | "passport" | "other";
 
 export type RoomType = "single" | "double" | "triple" | "quadruple" | "other";
 
-export type PaymentStanding = "overdue" | "due_today" | "pending" | "settled";
+export type PaymentStanding = "overdue" | "due_today" | "due_soon" | "pending" | "settled";
+
+export type VehicleLayout = "coach_2_2" | "coach_46" | "coach_50" | "van_15";
+
+export type PixKeyType = "cpf" | "cnpj" | "email" | "phone" | "evp";
 
 export type IssueCode =
   | "boarding_point_excursion"
@@ -47,6 +51,8 @@ export type Agency = {
   phone: string | null;
   city: string | null;
   notes: string | null;
+  pixKey: string | null;
+  pixKeyType: PixKeyType | null;
   trialEndsAt: string;
   createdAt: string;
   updatedAt: string;
@@ -61,6 +67,7 @@ export type Excursion = {
   returnAt: string | null;
   vehicleCapacity: number;
   vehicleLabel: string | null;
+  vehicleLayout: VehicleLayout;
   status: ExcursionStatus;
   notes: string | null;
   createdAt: string;

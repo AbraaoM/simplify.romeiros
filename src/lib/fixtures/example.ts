@@ -160,6 +160,7 @@ function excursion(input: {
     returnAt: input.returnAt,
     vehicleCapacity: input.capacity,
     vehicleLabel: input.vehicleLabel,
+    vehicleLayout: "coach_2_2",
     status: input.status,
     notes: null,
     createdAt: STAMP,
@@ -204,23 +205,23 @@ export function buildExample(today: string): AgencyData {
   block(aparecidaSeats, 44, "Reservada para a tripulação");
 
   const aparecidaPeople = people(aparecidaId, [
-    { id: 101, name: "Maria Souza", document: "90000000001", pointId: taubate, seat: 1 },
-    { id: 102, name: "João Ribeiro", document: "90000000002", pointId: taubate, seat: 2 },
-    { id: 103, name: "Camila Rocha", document: "90000000003", pointId: guara, seat: 6 },
-    { id: 104, name: "Ana Lima", document: "90000000004", pointId: pinda, seat: 5 },
-    { id: 105, name: "Pedro Alves", document: "90000000005", pointId: guara, seat: 9 },
-    { id: 106, name: "Lucia Ferreira", document: "90000000006", pointId: taubate, seat: 10 },
-    { id: 107, name: "Carlos Mendes", document: "90000000007", pointId: taubate, seat: 13 },
-    { id: 108, name: "Bruno Teixeira", document: "90000000008", pointId: pinda, seat: 14 },
-    { id: 109, name: "Rita Gomes", document: "90000000009", pointId: pinda, seat: 17 },
-    { id: 110, name: "Paulo Nunes", document: "90000000010", pointId: guara, seat: 18 },
-    { id: 111, name: "Diego Martins", document: "90000000011", pointId: taubate, seat: 21 },
-    { id: 112, name: "Helena Dias", document: "90000000012", pointId: taubate, seat: 22 },
-    { id: 113, name: "Sandra Vieira", document: "90000000013", pointId: pinda, seat: null },
+    { id: 101, name: "Maria Souza", document: "90000000094", pointId: taubate, seat: 1 },
+    { id: 102, name: "João Ribeiro", document: "90000000175", pointId: taubate, seat: 2 },
+    { id: 103, name: "Camila Rocha", document: "90000000256", pointId: guara, seat: 6 },
+    { id: 104, name: "Ana Lima", document: "90000000337", pointId: pinda, seat: 5 },
+    { id: 105, name: "Pedro Alves", document: "90000000418", pointId: guara, seat: 9 },
+    { id: 106, name: "Lucia Ferreira", document: "90000000507", pointId: taubate, seat: 10 },
+    { id: 107, name: "Carlos Mendes", document: "90000000680", pointId: taubate, seat: 13 },
+    { id: 108, name: "Bruno Teixeira", document: "90000000760", pointId: pinda, seat: 14 },
+    { id: 109, name: "Rita Gomes", document: "90000000841", pointId: pinda, seat: 17 },
+    { id: 110, name: "Paulo Nunes", document: "90000000922", pointId: guara, seat: 18 },
+    { id: 111, name: "Diego Martins", document: "90000001066", pointId: taubate, seat: 21 },
+    { id: 112, name: "Helena Dias", document: "90000001147", pointId: taubate, seat: 22 },
+    { id: 113, name: "Sandra Vieira", document: "90000001228", pointId: pinda, seat: null },
     {
       id: 114,
       name: "Fernanda Costa",
-      document: "90000000014",
+      document: "90000001309",
       pointId: taubate,
       seat: null,
       status: "cancelled",
@@ -245,17 +246,17 @@ export function buildExample(today: string): AgencyData {
   }
 
   const camposPeople = people(camposId, [
-    { id: 201, name: "Elisa Prado", document: "90000000021", pointId: camposPoint, seat: 1 },
-    { id: 202, name: "Marcos Vieira", document: "90000000022", pointId: camposPoint, seat: 2 },
-    { id: 203, name: "Nina Costa", document: "90000000023", pointId: camposPoint, seat: 3 },
-    { id: 204, name: "Otávio Lima", document: "90000000024", pointId: camposPoint, seat: 4 },
+    { id: 201, name: "Elisa Prado", document: "90000002038", pointId: camposPoint, seat: 1 },
+    { id: 202, name: "Marcos Vieira", document: "90000002119", pointId: camposPoint, seat: 2 },
+    { id: 203, name: "Nina Costa", document: "90000002208", pointId: camposPoint, seat: 3 },
+    { id: 204, name: "Otávio Lima", document: "90000002380", pointId: camposPoint, seat: 4 },
   ]);
   for (const id of [201, 202, 203, 204]) {
     occupy(camposSeats, id - 200, uid(id));
   }
 
   const cancaoPeople = people(cancaoId, [
-    { id: 301, name: "Irmã Benedita", document: "90000000031", pointId: null, seat: 1 },
+    { id: 301, name: "Irmã Benedita", document: "90000003000", pointId: null, seat: 1 },
   ]);
   occupy(cancaoSeats, 1, uid(301));
 
@@ -338,6 +339,8 @@ export function buildExample(today: string): AgencyData {
       phone: "12999990000",
       city: "Taubaté",
       notes: null,
+      pixKey: null,
+      pixKeyType: null,
       trialEndsAt: STAMP,
       createdAt: STAMP,
       updatedAt: STAMP,

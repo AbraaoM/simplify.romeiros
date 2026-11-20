@@ -39,7 +39,7 @@ export default async function HomePage() {
       ) : null}
       {attention.length > 0 ? (
         <section className="mt-12">
-          <h2 className="text-sm text-muted dark:text-faint">Para hoje</h2>
+          <h2 className="text-sm text-muted dark:text-faint">Vencidas e a vencer em 7 dias</h2>
           <div className="mt-2">
             <AttentionList items={attention} />
           </div>

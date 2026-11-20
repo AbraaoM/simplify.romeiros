@@ -1,6 +1,5 @@
 import "server-only";
 import {
-  buildCoachLayout,
   excursionSchedule,
   normalizeDocument,
   parseBoardingNames,
@@ -10,7 +9,17 @@ import {
   planSeatChange,
   requireName,
 } from "@/lib/domain/commands";
-import type { DocumentType, ExcursionStatus } from "@/lib/domain/types";
+import { buildLayoutFromCapacity } from "@/lib/domain/layouts";
+import {
+  emptyPixKey,
+  normalizePixKey,
+} from "@/lib/format/pix-key";
+import {
+  parsePassengerCsv,
+  previewPassengerImport,
+  type CsvPassengerRow,
+} from "@/lib/domain/csv-passengers";
+import type { DocumentType, ExcursionStatus, PixKeyType } from "@/lib/domain/types";
 import { readAgencyFromDatabase } from "@/lib/repositories/agency";
 import { resolveTenantContext } from "@/lib/security/context";
 import {
@@ -31,6 +40,7 @@ import {
   insertInstallmentRecord,
   insertPassengerRecord,
   markInstallmentPaid,
+  importPassengerRecords,
   saveAgencyRecord,
   updateExcursionRecord,
   updatePassengerRecord,
@@ -81,7 +91,7 @@ function fail(error: unknown): { ok: false; message: string } {
     return { ok: false, message: NOT_FOUND };
   }
   if (error instanceof WriteConflict) {
-    return { ok: false, message: "Não foi possível lançar a parcela. Tente de novo." };
+    return { ok: false, message: conflictMessage(error) };
   }
   if (isSecurityError(error)) {
     return deny(error);
@@ -94,9 +104,18 @@ export async function saveAgency(input: {
   name: string;
   phone: string;
   city: string;
+  pixKey?: string;
 }): Promise<ServiceResult> {
   const name = requireName(input.name);
   if (!name.ok) return name;
+  let pixKey: string | null = null;
+  let pixKeyType: PixKeyType | null = null;
+  if (!emptyPixKey(input.pixKey ?? "")) {
+    const pix = normalizePixKey(input.pixKey ?? "");
+    if (!pix.ok) return pix;
+    pixKey = pix.value.key;
+    pixKeyType = pix.value.type;
+  }
   const loaded = await load();
   if (!loaded.ok) return loaded;
   try {
@@ -104,6 +123,8 @@ export async function saveAgency(input: {
       name: name.name,
       phone: blank(input.phone),
       city: blank(input.city),
+      pixKey,
+      pixKeyType,
     });
     return { ok: true };
   } catch (error) {
@@ -124,7 +145,7 @@ export async function createExcursion(input: {
   const schedule = excursionSchedule(input.departureDate, input.returnDate);
   if (!schedule.ok) return schedule;
   const capacity = Number(input.capacity);
-  const layout = buildCoachLayout(capacity);
+  const layout = buildLayoutFromCapacity(capacity);
   if (!layout.ok) return layout;
   const loaded = await load();
   if (!loaded.ok) return loaded;
@@ -137,7 +158,8 @@ export async function createExcursion(input: {
       originCity: blank(input.originCity),
       departureAt: schedule.departureAt,
       returnAt: schedule.returnAt,
-      vehicleCapacity: capacity,
+      vehicleCapacity: layout.capacity,
+      vehicleLayout: layout.layout,
       seats: layout.seats,
       boardingNames: parseBoardingNames(input.boarding),
     });
@@ -455,6 +477,84 @@ export async function cancelPassenger(input: {
   } catch (error) {
     return fail(error);
   }
+}
+
+
+export type ImportPreviewResult = ServiceResult<{
+  rows: CsvPassengerRow[];
+  errorCount: number;
+}>;
+
+export async function previewPassengerCsv(input: {
+  excursionId: string;
+  content: string;
+  byteLength: number;
+}): Promise<ImportPreviewResult> {
+  const parsed = parsePassengerCsv(input.content, input.byteLength);
+  if (!parsed.ok) return parsed;
+  const loaded = await load();
+  if (!loaded.ok) return loaded;
+  if (!loaded.data.excursions.some((item) => item.id === input.excursionId)) {
+    return { ok: false, message: NOT_FOUND };
+  }
+  const preview = previewPassengerImport(parsed.rows, {
+    existing: loaded.data.passengers.filter(
+      (item) => item.excursionId === input.excursionId,
+    ),
+    boardingPoints: loaded.data.boardingPoints.filter(
+      (item) => item.excursionId === input.excursionId,
+    ),
+  });
+  return {
+    ok: true,
+    rows: preview.rows,
+    errorCount: preview.errorCount,
+  };
+}
+
+export async function importPassengers(input: {
+  excursionId: string;
+  content: string;
+  byteLength: number;
+}): Promise<ServiceResult<{ count: number }>> {
+  const parsed = parsePassengerCsv(input.content, input.byteLength);
+  if (!parsed.ok) return parsed;
+  const loaded = await load();
+  if (!loaded.ok) return loaded;
+  if (!loaded.data.excursions.some((item) => item.id === input.excursionId)) {
+    return { ok: false, message: NOT_FOUND };
+  }
+  const preview = previewPassengerImport(parsed.rows, {
+    existing: loaded.data.passengers.filter(
+      (item) => item.excursionId === input.excursionId,
+    ),
+    boardingPoints: loaded.data.boardingPoints.filter(
+      (item) => item.excursionId === input.excursionId,
+    ),
+  });
+  if (preview.errorCount > 0) {
+    return { ok: false, message: "Corrija as linhas com erro antes de importar." };
+  }
+  if (preview.records.length === 0) {
+    return { ok: false, message: "Não há passageiros no arquivo." };
+  }
+  try {
+    const ids = await importPassengerRecords(loaded.context, {
+      excursionId: input.excursionId,
+      records: preview.records,
+    });
+    return { ok: true, count: ids.length };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+function conflictMessage(error: WriteConflict): string {
+  if (error.kind === "cpf") return "Este CPF já está nesta excursão.";
+  if (error.kind === "installment") {
+    return "Não foi possível lançar a parcela. Tente de novo.";
+  }
+  return "Não foi possível gravar. Tente de novo.";
 }
 
 function optionalInstallment(amount: string, dueDate: string, sequences: number[]) {

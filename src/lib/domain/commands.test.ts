@@ -108,9 +108,9 @@ describe("parseMoney", () => {
 
 describe("normalizeDocument", () => {
   test("keeps an 11-digit CPF and drops the mask", () => {
-    expect(normalizeDocument("cpf", "900.000.000-01")).toEqual({
+    expect(normalizeDocument("cpf", "529.982.247-25")).toEqual({
       ok: true,
-      number: "90000000001",
+      number: "52998224725",
     });
   });
 
@@ -119,8 +119,10 @@ describe("normalizeDocument", () => {
     expect(normalizeDocument("rg", "  ")).toEqual({ ok: true, number: null });
   });
 
-  test("rejects a CPF that is not 11 digits", () => {
+  test("rejects a CPF that is not 11 digits or has a bad check digit", () => {
     expect(normalizeDocument("cpf", "123").ok).toBe(false);
+    expect(normalizeDocument("cpf", "11111111111").ok).toBe(false);
+    expect(normalizeDocument("cpf", "52998224724").ok).toBe(false);
   });
 });
 

@@ -2,7 +2,12 @@ import { isActiveExcursion } from "@/lib/domain/active";
 import { collectIssues } from "@/lib/domain/consistency";
 import { calendarDateInBrazil } from "@/lib/domain/dates";
 import { paymentStanding } from "@/lib/domain/payment-standing";
-import { isCoach22 } from "@/lib/domain/seats";
+import { addDays } from "@/lib/domain/dates";
+import { detectMapMode, type SeatMapMode } from "@/lib/domain/seats";
+import {
+  buildStaticPixPayload,
+  installmentTxid,
+} from "@/lib/domain/pix-emv";
 import type {
   AgencyData,
   BoardingPoint,
@@ -44,7 +49,7 @@ export type AttentionItem = {
   seatNumber: number | null;
   amountCents: number;
   dueDate: string;
-  standing: "overdue" | "due_today";
+  standing: "overdue" | "due_today" | "due_soon";
 };
 
 export type Dashboard = {
@@ -81,6 +86,12 @@ export type RoomView = {
   passengerNames: string[];
 };
 
+export type PixCharge = {
+  installmentId: string;
+  payload: string;
+  whatsappMessage: string;
+};
+
 export type PassengerFile = {
   excursionId: string;
   destination: string;
@@ -90,6 +101,8 @@ export type PassengerFile = {
   seatNumber: number | null;
   installments: Installment[];
   pendingInstallmentId: string | null;
+  pixKeyConfigured: boolean;
+  pixCharges: PixCharge[];
 };
 
 export type SeatChoice = {
@@ -119,7 +132,7 @@ export type ExcursionView = {
   paid: number;
   open: number;
   overdue: number;
-  mapMode: "coach_2_2" | "list";
+  mapMode: SeatMapMode;
   mapIncomplete: boolean;
   seats: SeatView[];
   passengers: PassengerRow[];
@@ -146,8 +159,9 @@ export function projectDueAttention(
   );
   const items: AttentionItem[] = [];
 
+  const until = addDays(today, 7);
   for (const installment of data.installments) {
-    if (installment.status !== "pending" || installment.dueDate > today) continue;
+    if (installment.status !== "pending" || installment.dueDate > until) continue;
     const excursion = excursions.get(installment.excursionId);
     if (!excursion) continue;
     const passenger = data.passengers.find(
@@ -165,12 +179,19 @@ export function projectDueAttention(
       seatNumber: seatNumberFor(data.seats, passenger.id),
       amountCents: installment.amountCents,
       dueDate: installment.dueDate,
-      standing: installment.dueDate < today ? "overdue" : "due_today",
+      standing:
+        installment.dueDate < today
+          ? "overdue"
+          : installment.dueDate === today
+            ? "due_today"
+            : "due_soon",
     });
   }
 
+  const rank = (standing: AttentionItem["standing"]) =>
+    standing === "overdue" ? 0 : standing === "due_today" ? 1 : 2;
   items.sort((a, b) => {
-    if (a.standing !== b.standing) return a.standing === "overdue" ? -1 : 1;
+    if (a.standing !== b.standing) return rank(a.standing) - rank(b.standing);
     if (a.dueDate !== b.dueDate) return a.dueDate < b.dueDate ? -1 : 1;
     return a.passengerName.localeCompare(b.passengerName, "pt-BR");
   });
@@ -230,7 +251,7 @@ export function projectExcursion(
     vehicleCapacity: excursion.vehicleCapacity,
     occupied: seats.filter((seat) => seat.status === "occupied").length,
     ...counts,
-    mapMode: isCoach22(seats) ? "coach_2_2" : "list",
+    mapMode: detectMapMode(seats),
     mapIncomplete: issues.some((issue) => SEAT_ISSUE.has(issue)),
     seats: seats.map((seat) => toSeatView(data, seat, today)),
     passengers: passengers
@@ -263,6 +284,15 @@ export function projectPassengerFile(
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0];
   const seat = data.seats.find((item) => item.passengerId === passengerId);
 
+  const pixCharges = pendingPixCharges({
+    agencyName: data.agency?.name ?? "Agencia",
+    agencyCity: data.agency?.city ?? null,
+    pixKey: data.agency?.pixKey ?? null,
+    destination: excursion.destination,
+    passengerName: passenger.fullName,
+    installments: installments.filter((item) => item.status === "pending"),
+  });
+
   return {
     excursionId,
     destination: excursion.destination,
@@ -274,6 +304,8 @@ export function projectPassengerFile(
     seatNumber: seat?.seatNumber ?? null,
     installments,
     pendingInstallmentId: pending && pending.dueDate ? pending.id : null,
+    pixKeyConfigured: Boolean(data.agency?.pixKey),
+    pixCharges,
   };
 }
 
@@ -471,4 +503,35 @@ function seatNumberFor(seats: Seat[], passengerId: string): number | null {
     .filter((seat) => seat.passengerId === passengerId)
     .sort((a, b) => a.seatNumber - b.seatNumber);
   return matches[0]?.seatNumber ?? null;
+}
+
+
+function pendingPixCharges(input: {
+  agencyName: string;
+  agencyCity: string | null;
+  pixKey: string | null;
+  destination: string;
+  passengerName: string;
+  installments: Installment[];
+}): PixCharge[] {
+  if (!input.pixKey) return [];
+  return input.installments.map((installment) => {
+    const payload = buildStaticPixPayload({
+      key: input.pixKey as string,
+      merchantName: input.agencyName,
+      merchantCity: input.agencyCity ?? "BRASIL",
+      amountCents: installment.amountCents,
+      txid: installmentTxid(installment.id),
+    });
+    const amount = new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(installment.amountCents / 100);
+    const due = installment.dueDate.split("-").reverse().join("/");
+    const whatsappMessage =
+      `Olá, ${input.passengerName}! Segue a cobrança de ${amount} ` +
+      `da excursão ${input.destination}, vencimento ${due}.\n\n` +
+      `Pix copia e cola (o valor vai direto para a conta da agência):\n\n${payload}`;
+    return { installmentId: installment.id, payload, whatsappMessage };
+  });
 }

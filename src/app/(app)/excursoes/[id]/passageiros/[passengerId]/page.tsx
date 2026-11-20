@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CancelPassengerForm } from "@/components/forms/cancel-form";
 import { PassengerEditForm } from "@/components/forms/passenger-form";
 import { InstallmentForm, MarkPaidForm } from "@/components/forms/payment-form";
+import { PixCharge } from "@/components/payments/pix-charge";
 import { StandingMark } from "@/components/ui/standing-mark";
 import { ErrorState } from "@/components/ui/error-state";
 import { paymentStanding } from "@/lib/domain/payment-standing";
@@ -12,6 +13,7 @@ import { formatDocument } from "@/lib/format/document";
 import { formatBrl } from "@/lib/format/money";
 import { getPassengerFile } from "@/lib/services/queries";
 import type { Installment } from "@/lib/domain/types";
+import type { PassengerFile } from "@/lib/services/views";
 import { NAME } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
@@ -72,11 +74,14 @@ export default async function PassengerFilePage({
               <p className="mt-1 text-sm">
                 <InstallmentStanding installment={installment} today={today} />
               </p>
-              {writable && installment.id === file.pendingInstallmentId ? (
-                <MarkPaidForm
+              {installment.status === "pending" ? (
+                <PendingPix
+                  file={file}
+                  installmentId={installment.id}
+                  writable={writable}
                   excursionId={id}
                   passengerId={passengerId}
-                  installmentId={installment.id}
+                  isPrimary={installment.id === file.pendingInstallmentId}
                 />
               ) : null}
             </li>
@@ -113,6 +118,50 @@ export default async function PassengerFilePage({
         </Link>
       </p>
     </article>
+  );
+}
+
+function PendingPix({
+  file,
+  installmentId,
+  writable,
+  excursionId,
+  passengerId,
+  isPrimary,
+}: {
+  file: PassengerFile;
+  installmentId: string;
+  writable: boolean;
+  excursionId: string;
+  passengerId: string;
+  isPrimary: boolean;
+}) {
+  const charge = file.pixCharges.find((item) => item.installmentId === installmentId);
+  return (
+    <>
+      {file.pixKeyConfigured && charge ? (
+        <PixCharge
+          payload={charge.payload}
+          message={charge.whatsappMessage}
+          phone={file.passenger.phone}
+        />
+      ) : writable ? (
+        <p className="mt-3 text-sm text-muted dark:text-faint">
+          Para gerar o Pix copia e cola,{" "}
+          <Link href="/agencia" className="underline">
+            cadastre a chave Pix da agência
+          </Link>
+          .
+        </p>
+      ) : null}
+      {writable && isPrimary ? (
+        <MarkPaidForm
+          excursionId={excursionId}
+          passengerId={passengerId}
+          installmentId={installmentId}
+        />
+      ) : null}
+    </>
   );
 }
 

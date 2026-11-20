@@ -61,9 +61,19 @@ create table agencies (
   phone text,
   city text,
   notes text,
+  pix_key text,
+  pix_key_type text
+    check (
+      pix_key_type is null
+      or pix_key_type in ('cpf', 'cnpj', 'email', 'phone', 'evp')
+    ),
   trial_ends_at timestamptz not null default (now() + interval '14 days'),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  check (
+    (pix_key is null and pix_key_type is null)
+    or (pix_key is not null and pix_key_type is not null)
+  )
 );
 
 -- One active membership per user in this phase: context must not pick a "first" agency.
@@ -91,6 +101,8 @@ create table excursions (
   vehicle_capacity integer not null
     check (vehicle_capacity > 0 and vehicle_capacity <= 80),
   vehicle_label text,
+  vehicle_layout text not null default 'coach_2_2'
+    check (vehicle_layout in ('coach_2_2', 'coach_46', 'coach_50', 'van_15')),
   status text not null default 'draft'
     check (status in ('draft', 'open', 'closed', 'completed', 'cancelled')),
   notes text,
@@ -152,14 +164,21 @@ create table passengers (
 create index passengers_agency_excursion_idx
   on passengers (agency_id, excursion_id, status);
 
+-- CPF, when present, is unique among active passengers of the same excursion.
+create unique index passengers_unique_cpf_per_excursion_idx
+  on passengers (agency_id, excursion_id, document_number)
+  where document_type = 'cpf'
+    and document_number is not null
+    and status <> 'cancelled';
+
 create table seats (
   id uuid primary key default gen_random_uuid(),
   agency_id uuid not null references agencies (id),
   excursion_id uuid not null,
   seat_number integer not null check (seat_number > 0),
   row_index integer not null check (row_index > 0),
-  side text not null check (side in ('left', 'right')),
-  position text not null check (position in ('window', 'aisle')),
+  side text not null check (side in ('left', 'right', 'center')),
+  position text not null check (position in ('window', 'aisle', 'middle')),
   status text not null default 'available'
     check (status in ('available', 'occupied', 'blocked')),
   passenger_id uuid,

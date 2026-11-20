@@ -57,22 +57,21 @@ leitura ou escrita — inclusive `assignSeat`, `releaseSeat` e `cancelPassenger`
   contexto e `RETURNING`.
 - `schema-isolation.test.ts`: inspeciona `db/schema.sql` e
   `db/migrations/0001_multitenant_auth.sql` (não executa SQL contra banco real).
-- Caracterização de concorrência (cancelamento + snapshot atrasado + atribuição)
-  permanece: ainda não há prova de ordem/lock em Postgres real.
+- Atribuição, troca e cancelamento de poltrona fazem `SELECT ... FOR UPDATE`
+  em ordem estável (id) e revalidam status dentro da transação. A prova de
+  concorrência está em `src/lib/db/operacao.integration.test.ts` (roda só com
+  `TEST_DATABASE_URL` apontando para uma branch temporária, nunca o main).
 
-Não executar estas migrações nem seeds contra banco real a partir desta sessão.
-Nenhum teste deve abrir conexão verdadeira.
+Não executar migrações nem seeds contra o branch main de produção. Testes de
+integração só rodam com `TEST_DATABASE_URL` em uma branch temporária.
 
 ## Backlog ainda aberto
 
-1. Locks de passageiro em ordem estável na atribuição/cancelamento; revalidar
-   status e assento dentro da transação. Testar interleavings num Postgres local
-   descartável.
-2. Consentimento não presumido: finalidade de documentos, controlador, retenção,
+1. Consentimento não presumido: finalidade de documentos, controlador, retenção,
    auditoria mínima sem dados excessivos; revisão LGPD.
-3. Testes HTTP/browser de sessão e cookie; convite de `staff`; escolha explícita
+2. Testes HTTP/browser de sessão e cookie; convite de `staff`; escolha explícita
    de agência se no futuro houver mais de um vínculo.
-4. No host `caravaneiro.abraaomoreira.dev`, a raiz `/` ainda é reescrita para a
+3. No host `caravaneiro.abraaomoreira.dev`, a raiz `/` ainda é reescrita para a
    landing; o painel autenticado vive nas demais rotas do grupo `(app)`.
 
 Sem deploy/push/PR/pagamento/envio/migração feito por este lote. A liberação de

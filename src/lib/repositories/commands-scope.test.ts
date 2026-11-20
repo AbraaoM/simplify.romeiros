@@ -60,7 +60,7 @@ beforeEach(() => {
 
 describe("escritas SQL carregam agency_id do contexto", () => {
   test("saveAgencyRecord atualiza só a agência do contexto e devolve RETURNING", async () => {
-    await saveAgencyRecord(contextA, { name: "Agência A", phone: null, city: null });
+    await saveAgencyRecord(contextA, { name: "Agência A", phone: null, city: null, pixKey: null, pixKeyType: null });
     expect(recorder.calls).toHaveLength(1);
     expect(recorder.calls[0]?.sql).toMatch(/where id = \?/);
     expect(recorder.calls[0]?.sql).toMatch(/returning id/i);
@@ -74,6 +74,7 @@ describe("escritas SQL carregam agency_id do contexto", () => {
       departureAt: "2026-12-12T09:00:00.000Z",
       returnAt: null,
       vehicleCapacity: 2,
+      vehicleLayout: "coach_2_2",
       seats: [
         { seatNumber: 1, rowIndex: 1, side: "left", position: "window" },
         { seatNumber: 2, rowIndex: 1, side: "left", position: "aisle" },
