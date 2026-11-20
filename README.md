@@ -1,4 +1,4 @@
-# Simplify — Excursões e Romarias
+# Caravaneiro — Excursões e Romarias
 
 Parcelas, poltronas e quartos da excursão num lugar só.
 
@@ -11,37 +11,37 @@ npm run dev
 
 Abra http://localhost:3000. A interface é pensada primeiro para o celular.
 
-Sem `DATABASE_URL`, as telas usam dados de exemplo de uma agência fictícia. A faixa no topo avisa isso.
-
-## Banco
-
-Postgres no Neon, com `@neondatabase/serverless`.
-
-Crie um `.env.local` na sua máquina, fora do git, com a URL que a Neon te der:
+Crie um `.env.local` na sua máquina, fora do git:
 
 ```
 DATABASE_URL=postgresql://...
+BETTER_AUTH_SECRET=
+BETTER_AUTH_URL=http://localhost:3000
 ```
 
-O schema está em `db/schema.sql`. Esta versão não aplica o schema e não inventa uma connection string.
+`BETTER_AUTH_SECRET` precisa ter pelo menos 32 caracteres. Sem essas variáveis, o
+painel não usa demo: as rotas autenticadas redirecionam para `/entrar` e as
+operações falham fechadas. Não aponte `DATABASE_URL` para produção à toa.
+
+O schema completo está em `db/schema.sql`. A migração incremental está em
+`db/migrations/0001_multitenant_auth.sql`. Esta versão não aplica o schema e não
+inventa uma connection string. Um arquivo `.env.example` lista só os nomes das
+variáveis, sem segredos.
 
 ## O que esta versão mostra
 
-- Painel do que precisa de atenção hoje
-- Lista de parcelas atrasadas e das que vencem hoje
-- Detalhe da excursão, com mapa simples das poltronas, passageiros e quartos
-- Cadastro da agência, da excursão e do passageiro, quando o banco está ligado
-- Sentar na poltrona e marcar parcela paga
-- Tema claro e escuro
+- Landing pública e páginas `/entrar` e `/cadastrar`
+- Cadastro que cria usuário, agência (14 dias grátis, sem cobrança) e vínculo owner
+- Painel autenticado: atenção do dia, excursões, poltronas, passageiros e parcelas
+- Tema claro e escuro, com a marca Caravaneiro
+- Isolamento multi-tenant: cada agência só vê e altera os próprios dados
 
 ## O que fica para a próxima etapa
 
-Login, Asaas, quartos editáveis, bloquear poltrona e a lista em PDF.
+Asaas, quartos editáveis, bloquear poltrona, lista em PDF, convite de equipe e
+revisão LGPD mais completa.
 
-## Bloqueio de banco na revisão de segurança (06/11/2026)
+## Segurança
 
-O caminho de banco está temporariamente **fail-closed**: com DATABASE_URL,
-leitura/escrita retornam erro antes de construir cliente SQL. Login/contexto de
-agência ainda não existem; não é seguro selecionar a primeira agência como identidade.
-Demo fictícia sem DATABASE_URL continua. Não ligar banco real nem publicar.
-Contrato e mapa de todas ações/repos: `docs/security-context.md`.
+O contexto da agência é resolvido só no servidor, a partir da sessão Better Auth
+e do vínculo ativo. Contrato: `docs/security-context.md`.

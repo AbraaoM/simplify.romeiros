@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOutAction } from "@/lib/auth/actions";
+import { NAME } from "@/lib/brand";
 import { ThemeToggle } from "./theme-toggle";
 
 export function AppHeader({
@@ -20,7 +22,7 @@ export function AppHeader({
       <div className="mx-auto flex max-w-[1120px] flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-8">
         <div>
           <Link href="/" className="font-display text-2xl leading-none">
-            Simplify
+            {NAME}
           </Link>
           {agencyHref ? (
             <Link
@@ -45,6 +47,14 @@ export function AppHeader({
               </span>
             ) : null}
           </NavLink>
+          <form action={signOutAction}>
+            <button
+              type="submit"
+              className="inline-flex min-h-11 items-center text-sm text-muted dark:text-faint"
+            >
+              Sair
+            </button>
+          </form>
           <ThemeToggle />
         </nav>
       </div>

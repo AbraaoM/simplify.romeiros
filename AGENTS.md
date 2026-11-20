@@ -74,6 +74,25 @@ Agency owners will use this daily. A wrong seat assignment, lost payment status,
 Keep separation of responsibilities. Business logic must not be mixed with the UI.  
 Service layers for trips, seats, passengers, and installments should be usable by both UI and future API routes.
 
+
+## Autenticação e multi-tenant
+
+O acesso ao painel usa Better Auth (e-mail e senha) com sessão em cookie HttpOnly.
+A agência é o tenant. O contexto (`subjectId`, `sessionId`, `agencyId`, vínculo
+ativo) é resolvido só no servidor, a partir da sessão validada e de
+`agency_memberships`. Nunca confiar em `agencyId` de header, body ou URL, e nunca
+cair na “primeira agência”.
+
+Toda query e toda Server Action de dados da agência deve passar por
+`resolveTenantContext()` e filtrar por `agency_id` do contexto. Papéis atuais:
+`owner` e `staff`. O cadastro cria usuário + agência + vínculo `owner`, com
+`trial_ends_at` de 14 dias e sem cobrança. Não exibir preço na interface enquanto
+`SHOW_PRICING` for falso.
+
+Contrato detalhado: `docs/security-context.md`. Não rodar migrações nem seeds
+contra banco real sem pedido explícito do dono. Nunca inventar connection strings
+nem commitar `.env*` ou segredos.
+
 ## Compliance notes (later stages)
 - LGPD: careful with personal data (CPF, documents). Prefer minimal collection, clear purpose, and export controls.
 - ANTT: the system should be able to export the required passenger list; do not claim to replace official licensing.

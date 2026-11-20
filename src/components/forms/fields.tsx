@@ -13,12 +13,16 @@ export function TextField({
   defaultValue = "",
   type = "text",
   required = false,
+  autoComplete,
+  minLength,
 }: {
   label: string;
   name: string;
   defaultValue?: string;
-  type?: "text" | "tel" | "date" | "number";
+  type?: "text" | "tel" | "date" | "number" | "email" | "password";
   required?: boolean;
+  autoComplete?: string;
+  minLength?: number;
 }) {
   return (
     <label className="block">
@@ -28,6 +32,8 @@ export function TextField({
         type={type}
         required={required}
         defaultValue={defaultValue}
+        autoComplete={autoComplete}
+        minLength={minLength}
         className={control}
       />
     </label>
@@ -90,10 +96,12 @@ export function SubmitButton({
   pending,
   children,
   tone = "primary",
+  pendingLabel = "Salvando.",
 }: {
   pending: boolean;
   children: string;
   tone?: "primary" | "plain";
+  pendingLabel?: string;
 }) {
   const toneClass =
     tone === "primary"
@@ -105,7 +113,7 @@ export function SubmitButton({
       disabled={pending}
       className={`inline-flex min-h-11 items-center px-4 text-base transition-colors duration-300 disabled:opacity-60 ${toneClass}`}
     >
-      {pending ? "Salvando." : children}
+      {pending ? pendingLabel : children}
     </button>
   );
 }

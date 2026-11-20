@@ -4,10 +4,11 @@ import { notFound } from "next/navigation";
 import { NewPassengerForm } from "@/components/forms/passenger-form";
 import { ErrorState } from "@/components/ui/error-state";
 import { getExcursionView } from "@/lib/services/queries";
+import { NAME } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Novo passageiro — Simplify" };
+export const metadata: Metadata = { title: `Novo passageiro — ${NAME}` };
 
 export default async function NewPassengerPage({
   params,

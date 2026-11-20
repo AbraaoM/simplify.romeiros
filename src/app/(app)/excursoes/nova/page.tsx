@@ -2,15 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { NewExcursionForm } from "@/components/forms/excursion-form";
 import { ErrorState } from "@/components/ui/error-state";
-import { todayInBrazil } from "@/lib/domain/dates";
 import { loadAgencyData } from "@/lib/db/source";
+import { NAME } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Nova excursão — Simplify" };
+export const metadata: Metadata = { title: `Nova excursão — ${NAME}` };
 
 export default async function NewExcursionPage() {
-  const loaded = await loadAgencyData(todayInBrazil());
+  const loaded = await loadAgencyData();
   if (!loaded.ok) {
     return <ErrorState message="Não foi possível abrir o cadastro." />;
   }
