@@ -24,7 +24,17 @@ export function NewExcursionForm() {
       <TextField label="Cidade de saída" name="originCity" />
       <TextField label="Ida" name="departureDate" type="date" required />
       <TextField label="Volta" name="returnDate" type="date" />
-      <TextField label="Lugares" name="capacity" type="number" defaultValue="44" required />
+      <SelectField
+        label="Veículo"
+        name="capacity"
+        defaultValue="46"
+        options={[
+          { value: "15", label: "Van (15 lugares)" },
+          { value: "44", label: "Ônibus 2+2 (44 lugares)" },
+          { value: "46", label: "Ônibus convencional (46 lugares)" },
+          { value: "50", label: "Ônibus convencional (50 lugares)" },
+        ]}
+      />
       <AreaField label="Pontos de embarque, um por linha" name="boarding" />
       <FormError message={state.message} />
       <SubmitButton pending={pending}>Abrir excursão</SubmitButton>

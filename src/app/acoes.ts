@@ -10,12 +10,15 @@ import {
   cancelPassenger,
   createExcursion,
   createPassenger,
+  importPassengers,
   markPaid,
+  previewPassengerCsv,
   releaseSeat,
   saveAgency,
   updateExcursion,
   updatePassenger,
 } from "@/lib/services/commands";
+import type { CsvPassengerRow } from "@/lib/domain/csv-passengers";
 
 function text(formData: FormData, name: string): string {
   const value = formData.get(name);
@@ -37,6 +40,7 @@ export async function saveAgencyAction(
     name: text(formData, "name"),
     phone: text(formData, "phone"),
     city: text(formData, "city"),
+    pixKey: text(formData, "pixKey"),
   });
   if (!result.ok) return { message: result.message };
   refresh();
@@ -207,6 +211,73 @@ export async function cancelPassengerAction(
     confirmed: formData.get("confirm") === "yes",
   });
   if (!result.ok) return { message: result.message };
+  refresh(excursionId);
+  redirect(`/excursoes/${excursionId}`);
+}
+
+
+export type ImportActionState = {
+  message: string | null;
+  rows: CsvPassengerRow[] | null;
+  errorCount: number;
+  imported: number | null;
+};
+
+export const idleImportState: ImportActionState = {
+  message: null,
+  rows: null,
+  errorCount: 0,
+  imported: null,
+};
+
+async function readCsvUpload(
+  formData: FormData,
+): Promise<{ ok: true; content: string; byteLength: number } | { ok: false; message: string }> {
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, message: "Escolha um arquivo CSV." };
+  }
+  const buffer = Buffer.from(await file.arrayBuffer());
+  return { ok: true, content: buffer.toString("utf8"), byteLength: buffer.byteLength };
+}
+
+export async function previewPassengerCsvAction(
+  _prev: ImportActionState,
+  formData: FormData,
+): Promise<ImportActionState> {
+  const excursionId = text(formData, "excursionId");
+  const file = await readCsvUpload(formData);
+  if (!file.ok) return { ...idleImportState, message: file.message };
+  const result = await previewPassengerCsv({
+    excursionId,
+    content: file.content,
+    byteLength: file.byteLength,
+  });
+  if (!result.ok) return { ...idleImportState, message: result.message };
+  return {
+    message:
+      result.errorCount === 0
+        ? `Pronto para importar ${result.rows.length} passageiro${result.rows.length === 1 ? "" : "s"}.`
+        : "Corrija as linhas com erro antes de importar.",
+    rows: result.rows,
+    errorCount: result.errorCount,
+    imported: null,
+  };
+}
+
+export async function importPassengersAction(
+  _prev: ImportActionState,
+  formData: FormData,
+): Promise<ImportActionState> {
+  const excursionId = text(formData, "excursionId");
+  const file = await readCsvUpload(formData);
+  if (!file.ok) return { ...idleImportState, message: file.message };
+  const result = await importPassengers({
+    excursionId,
+    content: file.content,
+    byteLength: file.byteLength,
+  });
+  if (!result.ok) return { ...idleImportState, message: result.message };
   refresh(excursionId);
   redirect(`/excursoes/${excursionId}`);
 }

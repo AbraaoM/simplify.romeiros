@@ -30,6 +30,7 @@ export default async function AgencyPage() {
                 name: agency.name,
                 phone: agency.phone ?? "",
                 city: agency.city ?? "",
+                pixKey: agency.pixKey ?? "",
               }
             : null
         }

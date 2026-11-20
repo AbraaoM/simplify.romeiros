@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { formatExcursionRange } from "@/lib/domain/dates";
-import { overdueLabel, paidLabel } from "@/lib/format/labels";
+import { freeSeatsLabel, overdueLabel, paidLabel } from "@/lib/format/labels";
 import type { TripSummary } from "@/lib/services/views";
 
 export function TripList({ trips }: { trips: TripSummary[] }) {
@@ -17,7 +17,8 @@ export function TripList({ trips }: { trips: TripSummary[] }) {
             </span>
             <span className="mt-2 block text-sm text-muted dark:text-faint">
               {formatExcursionRange(trip.departureAt, trip.returnAt)} ·{" "}
-              {trip.occupied}/{trip.capacity}
+              {trip.occupied}/{trip.capacity} ·{" "}
+              {freeSeatsLabel(Math.max(trip.capacity - trip.occupied, 0))}
             </span>
             <span className="mt-2 block text-sm">
               {paidLabel(trip.paid)} · {trip.open} a receber ·{" "}

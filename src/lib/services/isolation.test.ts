@@ -15,7 +15,7 @@ const state = vi.hoisted(() => {
           trialEndsAt: "2026-12-04T00:00:00.000Z",
         },
         excursions: [
-          { id: "trip-A", agencyId: AGENCY_A, destination: "Aparecida", status: "open" },
+          { id: "trip-A", agencyId: AGENCY_A, destination: "Aparecida", status: "open", departureAt: "2026-12-12T08:00:00-03:00" },
         ],
         boardingPoints: [{ id: "bp-A", excursionId: "trip-A", name: "Centro" }],
         passengers: [
@@ -31,6 +31,7 @@ const state = vi.hoisted(() => {
             passengerId: "p-A",
             excursionId: "trip-A",
             status: "pending",
+            dueDate: "2026-12-20",
             sequence: 1,
           },
         ],
@@ -46,7 +47,7 @@ const state = vi.hoisted(() => {
           trialEndsAt: "2026-12-04T00:00:00.000Z",
         },
         excursions: [
-          { id: "trip-B", agencyId: AGENCY_B, destination: "Aparecida", status: "open" },
+          { id: "trip-B", agencyId: AGENCY_B, destination: "Aparecida", status: "open", departureAt: "2026-12-12T08:00:00-03:00" },
         ],
         boardingPoints: [{ id: "bp-B", excursionId: "trip-B", name: "Centro" }],
         passengers: [
@@ -59,6 +60,7 @@ const state = vi.hoisted(() => {
             passengerId: "p-B",
             excursionId: "trip-B",
             status: "pending",
+            dueDate: "2026-12-20",
             sequence: 1,
           },
         ],
@@ -197,6 +199,14 @@ vi.mock("@/lib/repositories/commands", async () => {
         state.owned(assertTenantContext(context).agencyId, "passengers", input.passengerId),
       ),
     ),
+    importPassengerRecords: vi.fn(async (context: unknown, input: { excursionId: string }) =>
+      track("importPassengerRecords", context, () => {
+        if (!state.owned(assertTenantContext(context).agencyId, "excursions", input.excursionId)) {
+          throw new RecordNotFound();
+        }
+        return ["p-new"];
+      }),
+    ),
   };
 });
 
@@ -207,7 +217,9 @@ import {
   cancelPassenger,
   createExcursion,
   createPassenger,
+  importPassengers,
   markPaid,
+  previewPassengerCsv,
   releaseSeat,
   saveAgency,
   updateExcursion,
@@ -216,6 +228,7 @@ import {
 import {
   getDashboard,
   getExcursionView,
+  getPassengerExport,
   getPassengerFile,
   getSeatPage,
   listDueAttention,
@@ -324,6 +337,24 @@ const sessionlessCommands = [
     "cancelPassenger",
     () => cancelPassenger({ excursionId: "trip-A", passengerId: "p-A", confirmed: true }),
   ],
+  [
+    "previewPassengerCsv",
+    () =>
+      previewPassengerCsv({
+        excursionId: "trip-A",
+        content: "nome\nMaria",
+        byteLength: 10,
+      }),
+  ],
+  [
+    "importPassengers",
+    () =>
+      importPassengers({
+        excursionId: "trip-A",
+        content: "nome\nMaria",
+        byteLength: 10,
+      }),
+  ],
 ] as const;
 
 const sessionlessQueries = [
@@ -332,6 +363,7 @@ const sessionlessQueries = [
   ["getExcursionView", () => getExcursionView("trip-A", "2026-11-20")],
   ["getPassengerFile", () => getPassengerFile("trip-A", "p-A", "2026-11-20")],
   ["getSeatPage", () => getSeatPage("trip-A", "s-A", "2026-11-20")],
+  ["getPassengerExport", () => getPassengerExport("trip-A")],
 ] as const;
 
 describe("sem sessão tudo falha fechado", () => {
@@ -358,6 +390,8 @@ describe("agência A não lê nem altera dados da B", () => {
     expect(passenger.ok && passenger.data).toBe(null);
     const seat = await getSeatPage("trip-B", "s-B", "2026-11-20");
     expect(seat.ok && seat.data).toBe(null);
+    const exported = await getPassengerExport("trip-B");
+    expect(exported.ok && exported.data).toBe(null);
     const dashboard = await getDashboard("2026-11-20");
     expect(dashboard.ok && dashboard.data.agencyName).toBe("Agência A");
     expect(JSON.stringify(dashboard)).not.toContain("trip-B");

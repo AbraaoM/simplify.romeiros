@@ -8,6 +8,10 @@ const migration = readFileSync(
   path.join(root, "db/migrations/0001_multitenant_auth.sql"),
   "utf8",
 );
+const migration2 = readFileSync(
+  path.join(root, "db/migrations/0002_operacao.sql"),
+  "utf8",
+);
 
 const childTables = [
   "boarding_points",
@@ -61,6 +65,21 @@ describe("esquema multi-tenant", () => {
     expect(migration).toContain("add constraint passengers_boarding_excursion_agency_fk");
     expect(migration).toContain("add constraint seats_passenger_excursion_agency_fk");
     expect(migration).toContain("add constraint room_assignments_passenger_agency_fk");
+  });
+
+  test("0002 adiciona chave Pix, layouts de veículo e CPF único por excursão", () => {
+    expect(schema).toContain("pix_key text");
+    expect(schema).toContain("pix_key_type text");
+    expect(schema).toContain("vehicle_layout text not null default 'coach_2_2'");
+    expect(schema).toContain("'coach_46', 'coach_50', 'van_15'");
+    expect(schema).toContain("side in ('left', 'right', 'center')");
+    expect(schema).toContain("position in ('window', 'aisle', 'middle')");
+    expect(schema).toContain("passengers_unique_cpf_per_excursion_idx");
+    expect(migration2).toContain("pix_key");
+    expect(migration2).toContain("vehicle_layout");
+    expect(migration2).toContain("passengers_unique_cpf_per_excursion_idx");
+    expect(migration2).toContain("center");
+    expect(migration2).toContain("middle");
   });
 });
 

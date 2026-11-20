@@ -7,6 +7,7 @@ import type {
 export const STANDING_LABEL: Record<PaymentStanding, string> = {
   overdue: "Atrasado",
   due_today: "Vence hoje",
+  due_soon: "A vencer",
   pending: "Pendente",
   settled: "Em dia",
 };
@@ -41,4 +42,13 @@ export function paidLabel(count: number): string {
 
 export function overdueLabel(count: number): string {
   return count === 1 ? "1 atrasada" : `${count} atrasadas`;
+}
+
+export function dueSoonHeadline(count: number): string {
+  return count === 1 ? "vence em 7 dias" : "vencem em 7 dias";
+}
+
+export function freeSeatsLabel(free: number): string {
+  if (free === 0) return "nenhuma poltrona livre";
+  return free === 1 ? "1 poltrona livre" : `${free} poltronas livres`;
 }

@@ -9,13 +9,15 @@ export function SeatMap({
   excursionId,
 }: {
   seats: SeatView[];
-  mode: "coach_2_2" | "list";
+  mode: "coach_2_2" | "van_15" | "list";
   excursionId?: string;
 }) {
   return (
     <div>
       {mode === "coach_2_2" ? (
         <Coach seats={seats} excursionId={excursionId} />
+      ) : mode === "van_15" ? (
+        <Van seats={seats} excursionId={excursionId} />
       ) : (
         <Numbered seats={seats} excursionId={excursionId} />
       )}
@@ -57,6 +59,48 @@ function Coach({
               <span className="w-5 shrink-0" aria-hidden="true" />
               <SeatCell seat={findSeat(row, "right", "aisle")} excursionId={excursionId} />
               <SeatCell seat={findSeat(row, "right", "window")} excursionId={excursionId} />
+            </li>
+          );
+        })}
+    </ol>
+  );
+}
+
+function Van({
+  seats,
+  excursionId,
+}: {
+  seats: SeatView[];
+  excursionId?: string;
+}) {
+  const rows = new Map<number, SeatView[]>();
+  for (const seat of seats) {
+    const row = rows.get(seat.rowIndex) ?? [];
+    row.push(seat);
+    rows.set(seat.rowIndex, row);
+  }
+
+  return (
+    <ol className="flex flex-col gap-1" aria-label="Mapa de poltronas da van">
+      {[...rows.keys()]
+        .sort((a, b) => a - b)
+        .map((index) => {
+          const row = rows.get(index) ?? [];
+          return (
+            <li key={index} className="flex items-center gap-1">
+              <SeatCell
+                seat={row.find((seat) => seat.side === "left" && seat.position === "window")}
+                excursionId={excursionId}
+              />
+              <span className="w-5 shrink-0" aria-hidden="true" />
+              <SeatCell
+                seat={row.find((seat) => seat.side === "center" && seat.position === "middle")}
+                excursionId={excursionId}
+              />
+              <SeatCell
+                seat={row.find((seat) => seat.side === "right" && seat.position === "window")}
+                excursionId={excursionId}
+              />
             </li>
           );
         })}

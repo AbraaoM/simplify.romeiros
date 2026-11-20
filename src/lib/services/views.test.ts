@@ -28,6 +28,15 @@ test("leads with due today when nothing is overdue", () => {
   });
 });
 
+test("includes parcels due within 7 days on the day board", () => {
+  const data = agency();
+  data.installments.push(parcel("p1", "2026-10-20"));
+  const attention = projectDueAttention(data, today);
+  expect(attention).toHaveLength(1);
+  expect(attention[0]?.standing).toBe("due_soon");
+  expect(projectDashboard(data, today).headline.kind).toBe("next_departure");
+});
+
 test("names the next departure when every parcel is still in the future", () => {
   const data = agency();
   data.installments.push(parcel("p1", "2026-11-01"));
@@ -137,6 +146,8 @@ function agency(): AgencyData {
       phone: null,
       city: "Taubaté",
       notes: null,
+      pixKey: null,
+      pixKeyType: null,
       trialEndsAt: "2026-11-20T00:00:00.000Z",
       createdAt: "",
       updatedAt: "",
@@ -161,6 +172,7 @@ function trip(): Excursion {
     returnAt: null,
     vehicleCapacity: 4,
     vehicleLabel: null,
+    vehicleLayout: "coach_2_2",
     status: "open",
     notes: null,
     createdAt: "",
@@ -175,7 +187,7 @@ function person(id: string, fullName: string): Passenger {
     boardingPointId: null,
     fullName,
     documentType: "cpf",
-    documentNumber: "90000000001",
+    documentNumber: "90000000094",
     documentIssuer: null,
     phone: null,
     email: null,

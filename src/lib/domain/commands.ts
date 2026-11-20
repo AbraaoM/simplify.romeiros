@@ -1,3 +1,4 @@
+import { isValidCpf } from "@/lib/format/document";
 import type {
   DocumentType,
   InstallmentStatus,
@@ -112,6 +113,9 @@ export function normalizeDocument(
     const digits = trimmed.replace(/\D/g, "");
     if (!/^\d{11}$/.test(digits)) {
       return { ok: false, message: "O CPF precisa ter 11 dígitos." };
+    }
+    if (!isValidCpf(digits)) {
+      return { ok: false, message: "O CPF não tem dígitos verificadores válidos." };
     }
     return { ok: true, number: digits };
   }

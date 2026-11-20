@@ -4,6 +4,7 @@ import { STANDING_LABEL } from "@/lib/format/labels";
 const DOT: Record<PaymentStanding, string> = {
   overdue: "bg-danger dark:bg-danger-soft",
   due_today: "bg-accent dark:bg-accent-light",
+  due_soon: "bg-accent-light dark:bg-accent",
   pending: "bg-muted dark:bg-faint",
   settled: "bg-ok dark:bg-ok-soft",
 };

@@ -2,14 +2,19 @@ import "server-only";
 import { NeonDbError } from "@neondatabase/serverless";
 import { getSql, type Sql } from "@/lib/db/client";
 import type { CoachSeat } from "@/lib/domain/commands";
-import type { DocumentType, ExcursionStatus } from "@/lib/domain/types";
+import type { DocumentType, ExcursionStatus, PixKeyType, VehicleLayout } from "@/lib/domain/types";
 import {
   assertTenantContext,
   type TenantContext,
 } from "@/lib/security/context";
 import { RecordNotFound } from "@/lib/security/errors";
 
-export class WriteConflict extends Error {}
+export class WriteConflict extends Error {
+  constructor(readonly kind: "generic" | "installment" | "cpf" = "generic") {
+    super(kind);
+    this.name = "WriteConflict";
+  }
+}
 
 function sqlOrThrow(): Sql {
   const sql = getSql();
@@ -49,12 +54,18 @@ export async function saveAgencyRecord(
     name: string;
     phone: string | null;
     city: string | null;
+    pixKey: string | null;
+    pixKeyType: PixKeyType | null;
   },
 ): Promise<string> {
   const { sql, agencyId } = scope(context);
   const updated = (await sql`
     update agencies
-    set name = ${input.name}, phone = ${input.phone}, city = ${input.city}
+    set name = ${input.name},
+        phone = ${input.phone},
+        city = ${input.city},
+        pix_key = ${input.pixKey},
+        pix_key_type = ${input.pixKeyType}
     where id = ${agencyId}
     returning id
   `) as Array<{ id: string }>;
@@ -69,6 +80,7 @@ export async function insertExcursion(
     departureAt: string;
     returnAt: string | null;
     vehicleCapacity: number;
+    vehicleLayout: VehicleLayout;
     seats: CoachSeat[];
     boardingNames: string[];
   },
@@ -179,6 +191,7 @@ export async function insertPassengerRecord(
     documentNumber: string | null;
     documentIssuer: string | null;
     boardingPointId: string | null;
+    notes?: string | null;
     installment: { amountCents: number; dueDate: string; sequence: number } | null;
   },
 ): Promise<string> {
@@ -276,7 +289,7 @@ export async function insertInstallmentRecord(
     requireRow(inserted);
   } catch (error) {
     if (error instanceof RecordNotFound) throw error;
-    if (error instanceof NeonDbError && error.code === "23505") throw new WriteConflict();
+    if (error instanceof NeonDbError && error.code === "23505") throw new WriteConflict(kindFromConstraint(error));
     throw error;
   }
 }
@@ -316,13 +329,40 @@ export async function applySeatChange(
   const scopedAgencyId = assertUuid(agencyId);
   const releaseSeatId = input.releaseSeatId ? assertUuid(input.releaseSeatId) : "";
   const occupySeatId = input.occupySeatId ? assertUuid(input.occupySeatId) : "";
-  try {
-    await sql.query(`
+  const seatSql = `
       do $body$
       declare
         released int;
         occupied int;
+        passenger_status text;
       begin
+        perform 1
+        from seats
+        where agency_id = '${scopedAgencyId}'::uuid
+          and excursion_id = '${excursionId}'::uuid
+          and (
+            id = nullif('${releaseSeatId}', '')::uuid
+            or id = nullif('${occupySeatId}', '')::uuid
+            or passenger_id = '${passengerId}'::uuid
+          )
+        order by id
+        for update;
+
+        select status into passenger_status
+        from passengers
+        where id = '${passengerId}'::uuid
+          and excursion_id = '${excursionId}'::uuid
+          and agency_id = '${scopedAgencyId}'::uuid
+        for update;
+
+        if passenger_status is null then
+          raise exception 'seat_conflict';
+        end if;
+
+        if '${occupySeatId}' <> '' and passenger_status = 'cancelled' then
+          raise exception 'seat_conflict';
+        end if;
+
         if '${releaseSeatId}' <> '' then
           update seats
           set status = 'available', passenger_id = null
@@ -352,8 +392,9 @@ export async function applySeatChange(
         end if;
       end
       $body$;
-    `);
-    return true;
+    `;
+  try {
+    return await runSeatStatement(sql, seatSql);
   } catch (error) {
     if (error instanceof NeonDbError && error.message.includes("seat_conflict")) {
       return false;
@@ -382,6 +423,24 @@ export async function cancelPassengerRecord(
         released int;
         updated int;
       begin
+        perform 1
+        from seats
+        where agency_id = '${scopedAgencyId}'::uuid
+          and excursion_id = '${excursionId}'::uuid
+          and (
+            id = nullif('${seatId}', '')::uuid
+            or passenger_id = '${passengerId}'::uuid
+          )
+        order by id
+        for update;
+
+        perform 1
+        from passengers
+        where id = '${passengerId}'::uuid
+          and excursion_id = '${excursionId}'::uuid
+          and agency_id = '${scopedAgencyId}'::uuid
+        for update;
+
         if '${seatId}' <> '' then
           update seats
           set status = 'available', passenger_id = null
@@ -417,3 +476,96 @@ export async function cancelPassengerRecord(
     throw error;
   }
 }
+
+
+export async function importPassengerRecords(
+  context: TenantContext,
+  input: {
+    excursionId: string;
+    records: Array<{
+      fullName: string;
+      documentType: DocumentType;
+      documentNumber: string | null;
+      phone: string | null;
+      boardingPointId: string | null;
+      notes: string | null;
+    }>;
+  },
+): Promise<string[]> {
+  const { sql, agencyId } = scope(context);
+  const excursionId = assertUuid(input.excursionId);
+  if (input.records.length === 0) return [];
+
+  const statements = input.records.map((record) => {
+    const passengerId = crypto.randomUUID();
+    return {
+      passengerId,
+      query: sql`
+        insert into passengers (
+          id, agency_id, excursion_id, boarding_point_id, full_name, document_type,
+          document_number, phone, notes, status
+        )
+        select
+          ${passengerId}, e.agency_id, e.id, ${record.boardingPointId}, ${record.fullName},
+          ${record.documentType}, ${record.documentNumber}, ${record.phone},
+          ${record.notes}, 'reserved'
+        from excursions e
+        where e.id = ${excursionId}
+          and e.agency_id = ${agencyId}
+        returning id
+      `,
+    };
+  });
+
+  try {
+    const results = await sql.transaction(statements.map((item) => item.query));
+    const ids: string[] = [];
+    for (const rows of results) {
+      const inserted = rows as Array<{ id: string }>;
+      if (!inserted || inserted.length !== 1) throw new RecordNotFound();
+      ids.push(String(inserted[0].id));
+    }
+    return ids;
+  } catch (error) {
+    if (error instanceof RecordNotFound) throw error;
+    if (error instanceof NeonDbError && error.code === "23505") throw new WriteConflict(kindFromConstraint(error));
+    throw error;
+  }
+}
+
+
+function kindFromConstraint(error: NeonDbError): "generic" | "installment" | "cpf" {
+  const text = `${error.message ?? ""} ${error.detail ?? ""} ${error.constraint ?? ""}`;
+  if (text.includes("passengers_unique_cpf") || text.includes("document_number")) {
+    return "cpf";
+  }
+  if (text.includes("installments") || text.includes("passenger_id, sequence")) {
+    return "installment";
+  }
+  return "generic";
+}
+
+async function runSeatStatement(sql: Sql, statement: string): Promise<true> {
+  const attempts = 3;
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      await sql.query(statement);
+      return true;
+    } catch (error) {
+      lastError = error;
+      if (error instanceof NeonDbError && isDeadlock(error) && attempt < attempts - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 25 * (attempt + 1)));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw lastError;
+}
+
+function isDeadlock(error: NeonDbError): boolean {
+  const text = `${error.code ?? ""} ${error.message ?? ""}`.toLowerCase();
+  return error.code === "40P01" || text.includes("deadlock");
+}
+

@@ -14,10 +14,10 @@ export default async function PendenciasPage() {
     <div>
       <h1 className="font-display text-5xl leading-[0.9] sm:text-6xl">Pendências</h1>
       <p className="mt-3 text-muted dark:text-faint">
-        O que está atrasado ou vence hoje.
+        Parcelas atrasadas e as que vencem nos próximos 7 dias.
       </p>
       {result.data.length === 0 ? (
-        <p className="mt-10">Nada para receber hoje.</p>
+        <p className="mt-10">Nenhuma parcela vencida ou a vencer em 7 dias.</p>
       ) : (
         <div className="mt-8">
           <AttentionList items={result.data} />

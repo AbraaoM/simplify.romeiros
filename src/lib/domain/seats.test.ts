@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { canAssignPassengerToSeat, isCoach22, occupancy } from "./seats";
+import { canAssignPassengerToSeat, detectMapMode, isCoach22, occupancy } from "./seats";
 import type { Seat } from "./types";
 
 describe("occupancy", () => {
@@ -72,3 +72,30 @@ function coachRow(rowIndex: number): Pick<Seat, "rowIndex" | "side" | "position"
     { rowIndex, side: "right", position: "window" },
   ];
 }
+
+
+describe("detectMapMode", () => {
+  test("keeps a complete 2+2 coach as coach_2_2", () => {
+    expect(detectMapMode([...coachRow(1), ...coachRow(2)])).toBe("coach_2_2");
+  });
+
+  test("accepts a 46-style last row of two window seats", () => {
+    expect(
+      detectMapMode([
+        ...coachRow(1),
+        { rowIndex: 2, side: "left", position: "window" },
+        { rowIndex: 2, side: "right", position: "window" },
+      ]),
+    ).toBe("coach_2_2");
+  });
+
+  test("detects a van with a center seat", () => {
+    expect(
+      detectMapMode([
+        { rowIndex: 1, side: "left", position: "window" },
+        { rowIndex: 1, side: "center", position: "middle" },
+        { rowIndex: 1, side: "right", position: "window" },
+      ]),
+    ).toBe("van_15");
+  });
+});

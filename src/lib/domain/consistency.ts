@@ -1,3 +1,4 @@
+import { isValidCpf } from "@/lib/format/document";
 import type { AgencyData, IssueCode } from "./types";
 
 export function collectIssues(data: AgencyData, excursionId: string): IssueCode[] {
@@ -53,7 +54,7 @@ export function collectIssues(data: AgencyData, excursionId: string): IssueCode[
     if (
       passenger.documentType === "cpf" &&
       passenger.documentNumber !== null &&
-      !/^\d{11}$/.test(passenger.documentNumber)
+      !isValidCpf(passenger.documentNumber)
     ) {
       issues.push("cpf_digits");
     }

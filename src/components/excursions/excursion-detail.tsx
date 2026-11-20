@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { calendarDateInBrazil, formatExcursionRange } from "@/lib/domain/dates";
 import { EXCURSION_STATUS_LABEL, overdueLabel, paidLabel } from "@/lib/format/labels";
 import type { ExcursionView } from "@/lib/services/views";
@@ -53,12 +54,16 @@ export function ExcursionDetail({
         <div>
           <h2 className="font-display text-3xl leading-none">Passageiros</h2>
           {writable ? (
-            <div className="mt-4">
+            <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
               <PrimaryLink href={`/excursoes/${view.id}/passageiros/novo`}>
                 Incluir passageiro
               </PrimaryLink>
+              <LinkLike href={`/excursoes/${view.id}/passageiros/importar`}>
+                Importar CSV
+              </LinkLike>
             </div>
           ) : null}
+          <ExportLinks excursionId={view.id} />
           <PassengerList
             passengers={view.passengers}
             excursionId={writable ? view.id : undefined}
@@ -82,5 +87,49 @@ export function ExcursionDetail({
         </>
       ) : null}
     </article>
+  );
+}
+
+
+function ExportLinks({ excursionId }: { excursionId: string }) {
+  return (
+    <div className="mt-6 space-y-2 text-sm">
+      <p>
+        <Link
+          href={`/excursoes/${excursionId}/exportacoes/passageiros.csv`}
+          className="inline-flex min-h-11 items-center"
+        >
+          Baixar lista em CSV
+        </Link>
+      </p>
+      <p>
+        <Link
+          href={`/excursoes/${excursionId}/exportacoes/passageiros.pdf`}
+          className="inline-flex min-h-11 items-center"
+        >
+          Baixar lista em PDF
+        </Link>
+      </p>
+      <p>
+        <Link
+          href={`/excursoes/${excursionId}/exportacoes/antt.csv`}
+          className="inline-flex min-h-11 items-center"
+        >
+          Baixar lista no formato da ANTT
+        </Link>
+      </p>
+      <p className="text-muted dark:text-faint">
+        A lista no formato da ANTT (nome, documento e poltrona) não substitui o
+        licenciamento.
+      </p>
+    </div>
+  );
+}
+
+function LinkLike({ href, children }: { href: string; children: string }) {
+  return (
+    <Link href={href} className="inline-flex min-h-11 items-center">
+      {children}
+    </Link>
   );
 }
