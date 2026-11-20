@@ -227,12 +227,12 @@ export async function createPassenger(input: {
   if (!installment.ok) return installment;
   const loaded = await load();
   if (!loaded.ok) return loaded;
+  if (!loaded.data.excursions.some((item) => item.id === input.excursionId)) {
+    return { ok: false, message: NOT_FOUND };
+  }
   const point = boardingPoint(loaded.data.boardingPoints, input.excursionId, input.boardingPointId);
   if (point === "invalid") {
     return { ok: false, message: "Escolha um ponto de embarque desta excursão." };
-  }
-  if (!loaded.data.excursions.some((item) => item.id === input.excursionId)) {
-    return { ok: false, message: NOT_FOUND };
   }
   try {
     const id = await insertPassengerRecord(loaded.context, {
