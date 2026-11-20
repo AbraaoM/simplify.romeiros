@@ -269,3 +269,42 @@ describe("planNewInstallment", () => {
     expect(planNewInstallment("80", "", []).ok).toBe(false);
   });
 });
+
+// Regressões da revisão 06/11: domínio precisa respeitar limites do schema.
+describe("limites persistíveis e isolamento do planejamento", () => {
+  test("recusa parcela acima do INTEGER PostgreSQL antes de tentar gravar", () => {
+    expect(planNewInstallment("21474836,48", "2026-11-09", []).ok).toBe(false);
+    expect(planNewInstallment("21474836,47", "2026-11-09", []).ok).toBe(true);
+  });
+
+  test("não libera poltrona de outra excursão ao cancelar passageiro", () => {
+    expect(planCancelPassenger(
+      { id: "p1", excursionId: "trip1", status: "reserved" },
+      [{ id: "seat-other", excursionId: "trip2", passengerId: "p1", status: "occupied" }],
+    )).toEqual({ ok: true, seatIdToRelease: null });
+  });
+
+  test("não planeja liberar poltrona de outra excursão ao trocar de lugar", () => {
+    expect(planSeatChange([
+      { id: "target", excursionId: "trip1", passengerId: null, status: "available" },
+      { id: "other", excursionId: "trip2", passengerId: "p1", status: "occupied" },
+    ], [{ id: "p1", excursionId: "trip1", status: "reserved" }],
+    { type: "assign", seatId: "target", passengerId: "p1" })).toEqual({
+      ok: true, writes: [{ seatId: "target", status: "occupied", passengerId: "p1" }],
+    });
+  });
+});
+
+describe("entradas financeiras e estado inconsistente", () => {
+  test.each(["-1", "NaN", "Infinity", "1e5", "1,001", "1.00", "999999999999999999999999"])("recusa valor inválido %s", (value) => {
+    expect(planNewInstallment(value, "2026-11-09", []).ok).toBe(false);
+  });
+  test("não ultrapassa INTEGER em sequência de parcela", () => {
+    expect(planNewInstallment("10", "2026-11-09", [2147483647]).ok).toBe(false);
+  });
+  test("não ocupa poltrona marcada ocupada com vínculo ausente", () => {
+    expect(planSeatChange([{ id: "s", excursionId: "t", status: "occupied", passengerId: null }],
+      [{ id: "p", excursionId: "t", status: "reserved" }],
+      { type: "assign", seatId: "s", passengerId: "p" }).ok).toBe(false);
+  });
+});

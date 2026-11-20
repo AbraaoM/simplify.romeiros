@@ -37,3 +37,11 @@ O schema está em `db/schema.sql`. Esta versão não aplica o schema e não inve
 ## O que fica para a próxima etapa
 
 Login, Asaas, quartos editáveis, bloquear poltrona e a lista em PDF.
+
+## Bloqueio de banco na revisão de segurança (06/11/2026)
+
+O caminho de banco está temporariamente **fail-closed**: com DATABASE_URL,
+leitura/escrita retornam erro antes de construir cliente SQL. Login/contexto de
+agência ainda não existem; não é seguro selecionar a primeira agência como identidade.
+Demo fictícia sem DATABASE_URL continua. Não ligar banco real nem publicar.
+Contrato e mapa de todas ações/repos: `docs/security-context.md`.

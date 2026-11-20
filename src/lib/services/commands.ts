@@ -27,7 +27,7 @@ import {
 } from "@/lib/repositories/commands";
 import { getSql } from "@/lib/db/client";
 
-export type ServiceResult<T extends Record<string, unknown> = Record<string, never>> =
+export type ServiceResult<T extends Record<string, unknown> = Record<never, never>> =
   | ({ ok: true } & T)
   | { ok: false; message: string };
 
@@ -45,8 +45,8 @@ const EXCURSION_STATUSES: ExcursionStatus[] = [
 const DOCUMENT_TYPES: DocumentType[] = ["cpf", "rg", "passport", "other"];
 
 async function load() {
-  if (!getSql()) return { ok: false as const, message: DB_OFF };
   try {
+    if (!getSql()) return { ok: false as const, message: DB_OFF };
     return { ok: true as const, data: await readAgencyFromDatabase() };
   } catch {
     console.error("Falha ao ler o banco.");

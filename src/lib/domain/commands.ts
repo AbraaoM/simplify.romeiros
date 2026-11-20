@@ -95,7 +95,8 @@ export function parseMoney(input: string): CommandResult<{ cents: number }> {
   }
 
   const cents = Number(reais) * 100 + Number(decimals);
-  if (!Number.isSafeInteger(cents)) {
+  // amount_cents no schema é INTEGER (32 bits), não BIGINT.
+  if (!Number.isSafeInteger(cents) || cents > 2_147_483_647) {
     return { ok: false, message: "Informe o valor em reais, como 150,00." };
   }
   return { ok: true, cents };
@@ -187,12 +188,12 @@ export function planSeatChange(
   if (target.passengerId === passenger.id) {
     return { ok: false, message: "Essa pessoa já está nesta poltrona." };
   }
-  if (target.passengerId) {
+  if (target.status !== "available" || target.passengerId) {
     return { ok: false, message: "Essa poltrona acabou de ser ocupada." };
   }
 
   const current = seats.find(
-    (item) => item.id !== target.id && item.passengerId === passenger.id,
+    (item) => item.excursionId === target.excursionId && item.id !== target.id && item.passengerId === passenger.id,
   );
   const writes: SeatWrite[] = [];
   if (current) {
@@ -212,13 +213,13 @@ export function planCancelPassenger(
   if (passenger.status === "cancelled") {
     return { ok: false, message: "Esse passageiro já está cancelado." };
   }
-  const seat = seats.find((item) => item.passengerId === passenger.id);
+  const seat = seats.find((item) => item.excursionId === passenger.excursionId && item.passengerId === passenger.id);
   return { ok: true, seatIdToRelease: seat?.id ?? null };
 }
 
 export function planMarkPaid(
   status: InstallmentStatus | null,
-): CommandResult<Record<string, never>> {
+): CommandResult<Record<never, never>> {
   if (!status) return { ok: false, message: "Essa parcela não foi encontrada." };
   if (status !== "pending") {
     return {
@@ -238,6 +239,9 @@ export function planNewInstallment(
   if (!money.ok) return money;
   const day = calendarDay(dueDate);
   if (!day) return { ok: false, message: "Informe o vencimento." };
+  if (sequences.some((value) => !Number.isInteger(value) || value < 1 || value >= 2_147_483_647)) {
+    return { ok: false, message: "Sequência de parcelas inválida ou esgotada." };
+  }
   const sequence = sequences.length === 0 ? 1 : Math.max(...sequences) + 1;
   return { ok: true, amountCents: money.cents, dueDate: day, sequence };
 }
