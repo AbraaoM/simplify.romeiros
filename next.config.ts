@@ -5,13 +5,18 @@ const nextConfig: NextConfig = {
   // Cache Components stay off until a later pass designs the static shell.
   cacheComponents: false,
   partialPrefetching: false,
-  // No subdomínio público do produto, a raiz mostra a landing.
+  // No subdomínio público do produto, a raiz mostra a landing só para visitante
+  // sem sessão; quem está logado vê o painel (que mora em "/").
   async rewrites() {
     return {
       beforeFiles: [
         {
           source: "/",
           has: [{ type: "host", value: "caravaneiro.abraaomoreira.dev" }],
+          missing: [
+            { type: "cookie", key: "better-auth.session_token" },
+            { type: "cookie", key: "__Secure-better-auth.session_token" },
+          ],
           destination: "/landing",
         },
       ],
