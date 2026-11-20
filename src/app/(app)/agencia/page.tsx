@@ -19,7 +19,7 @@ export default async function AgencyPage() {
   if (context.role !== "owner") {
     return (
       <article>
-        <h1 className="font-display text-5xl leading-[0.9]">Agência</h1>
+        <h1 className="font-display text-5xl leading-[1.1]">Agência</h1>
         <p className="mt-6">{OWNER_ONLY}</p>
       </article>
     );

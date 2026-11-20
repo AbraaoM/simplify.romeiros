@@ -1,5 +1,5 @@
 -- 0003: auditoria LGPD, convites de staff e anonimização de passageiro.
--- Incremental sobre 0002. Não aplicar no branch main de produção desta sessão.
+-- Incremental sobre 0002. Só adiciona tabelas, índices e uma coluna; não apaga nada.
 
 create table if not exists audit_log (
   id uuid primary key default gen_random_uuid(),
