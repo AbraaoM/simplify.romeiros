@@ -18,7 +18,12 @@ import {
   updateExcursion,
   updatePassenger,
 } from "@/lib/services/commands";
-import { idleImportState, type ImportActionState } from "./import-state";
+import {
+  idleImportState,
+  type CreateInviteState,
+  type ExportPassengerState,
+  type ImportActionState,
+} from "./import-state";
 import {
   anonymizePassenger,
   exportPassengerData,
@@ -273,16 +278,6 @@ export async function importPassengersAction(
   redirect(`/excursoes/${excursionId}`);
 }
 
-export type ExportPassengerState = {
-  message: string | null;
-  file: { filename: string; mime: string; content: string } | null;
-};
-
-export const idleExportPassengerState: ExportPassengerState = {
-  message: null,
-  file: null,
-};
-
 export async function exportPassengerAction(
   _prev: ExportPassengerState,
   formData: FormData,
@@ -321,20 +316,6 @@ export async function anonymizePassengerAction(
   refresh(excursionId);
   redirect(`/excursoes/${excursionId}/passageiros/${passengerId}`);
 }
-
-export type CreateInviteState = {
-  message: string | null;
-  url: string | null;
-  whatsappUrl: string | null;
-  expiresAt: string | null;
-};
-
-export const idleCreateInviteState: CreateInviteState = {
-  message: null,
-  url: null,
-  whatsappUrl: null,
-  expiresAt: null,
-};
 
 export async function createStaffInviteAction(
   _prev: CreateInviteState,

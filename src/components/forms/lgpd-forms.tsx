@@ -4,8 +4,8 @@ import { useEffect, useRef } from "react";
 import {
   anonymizePassengerAction,
   exportPassengerAction,
-  idleExportPassengerState,
 } from "@/app/acoes";
+import { idleExportPassengerState } from "@/app/import-state";
 import { FormError, SubmitButton, useFormAction, useStatefulFormAction } from "./fields";
 
 export function ExportPassengerForm({

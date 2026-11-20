@@ -2,9 +2,9 @@
 
 import {
   createStaffInviteAction,
-  idleCreateInviteState,
   revokeStaffAction,
 } from "@/app/acoes";
+import { idleCreateInviteState } from "@/app/import-state";
 import { FormError, SubmitButton, useFormAction, useStatefulFormAction } from "./fields";
 
 export function CreateInviteForm({ agencyName }: { agencyName: string }) {
