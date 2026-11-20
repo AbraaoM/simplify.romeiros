@@ -8,6 +8,8 @@ import {
   passengersCsv,
   passengersPdf,
 } from "@/lib/domain/export-lists";
+import { insertAuditLog } from "@/lib/repositories/audit";
+import { resolveTenantContext } from "@/lib/security/context";
 import { getPassengerExport } from "@/lib/services/queries";
 
 export type ExportKind = "passengers-csv" | "passengers-pdf" | "antt-csv" | "antt-pdf";
@@ -40,6 +42,16 @@ export async function passengerExportResponse(
       "text/csv; charset=utf-8",
     );
   }
+  if (kind === "antt-csv" || kind === "antt-pdf") {
+    const context = await resolveTenantContext();
+    await insertAuditLog(context, {
+      action: "export_antt",
+      entity: "excursion",
+      entityId: excursionId,
+      payload: { kind },
+    });
+  }
+
   if (kind === "antt-csv") {
     return fileResponse(
       anttPassengersCsv(result.data.rows),

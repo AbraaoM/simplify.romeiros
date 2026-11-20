@@ -65,12 +65,17 @@ leitura ou escrita — inclusive `assignSeat`, `releaseSeat` e `cancelPassenger`
 Não executar migrações nem seeds contra o branch main de produção. Testes de
 integração só rodam com `TEST_DATABASE_URL` em uma branch temporária.
 
+Papéis: `staff` não vê nem altera configurações da agência, chave Pix, convites
+nem anonimização. Só o `owner` gera convite de uso único (token guardado só como
+hash, 7 dias), compartilha o link por wa.me e pode revogar o vínculo. Ações
+sensíveis (exportar dados de um passageiro, anonimizar, importar CSV, gerar
+lista ANTT, marcar paga) gravam `audit_log` sem dados pessoais no payload.
+
 ## Backlog ainda aberto
 
-1. Consentimento não presumido: finalidade de documentos, controlador, retenção,
-   auditoria mínima sem dados excessivos; revisão LGPD.
-2. Testes HTTP/browser de sessão e cookie; convite de `staff`; escolha explícita
-   de agência se no futuro houver mais de um vínculo.
+1. Revisão jurídica dos textos de `/privacidade` e `/termos` (hoje são rascunho
+   técnico, não parecer jurídico). Testes HTTP/browser de sessão e cookie.
+2. Escolha explícita de agência se no futuro houver mais de um vínculo.
 3. No host `caravaneiro.abraaomoreira.dev`, a raiz `/` ainda é reescrita para a
    landing; o painel autenticado vive nas demais rotas do grupo `(app)`.
 

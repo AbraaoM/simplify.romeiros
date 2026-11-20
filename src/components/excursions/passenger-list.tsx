@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatDocument } from "@/lib/format/document";
+import { formatDocumentMasked } from "@/lib/format/document";
 import { formatBrl } from "@/lib/format/money";
 import { StandingMark } from "@/components/ui/standing-mark";
 import type { PassengerRow } from "@/lib/services/views";
@@ -38,7 +38,7 @@ export function PassengerList({
             </p>
           </div>
           <p className="mt-1 text-sm text-muted dark:text-faint">
-            {formatDocument(passenger.documentType, passenger.documentNumber)}
+            {formatDocumentMasked(passenger.documentType, passenger.documentNumber)}
             {passenger.documentIssuer ? ` · ${passenger.documentIssuer}` : ""}
           </p>
           <p className="mt-1 text-sm">
@@ -47,7 +47,9 @@ export function PassengerList({
               : "Sem ponto de embarque"}
           </p>
           <p className="mt-2 text-sm">
-            {passenger.status === "cancelled" ? (
+            {passenger.anonymizedAt ? (
+              "Anonimizado"
+            ) : passenger.status === "cancelled" ? (
               "Cancelado"
             ) : (
               <>

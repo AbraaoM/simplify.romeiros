@@ -3,6 +3,7 @@ export type SecurityCode =
   | "no_membership"
   | "ambiguous_membership"
   | "not_found"
+  | "forbidden"
   | "database"
   | "unconfigured";
 
@@ -35,3 +36,5 @@ export const SESSION_REQUIRED = "Entre novamente para continuar.";
 export const NOT_FOUND = "Não encontrado.";
 export const SAVE_FAILED = "Não foi possível salvar. Tente de novo.";
 export const DB_OFF = "O banco não está ligado.";
+
+export const OWNER_ONLY = "Apenas o dono da agência pode fazer isso.";

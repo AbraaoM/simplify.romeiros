@@ -180,6 +180,7 @@ function passenger(id: string, excursionId: string): Passenger {
     email: null,
     status: "confirmed",
     notes: null,
+    anonymizedAt: null,
     createdAt: "",
     updatedAt: "",
   };

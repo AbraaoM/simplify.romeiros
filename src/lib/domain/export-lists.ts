@@ -22,7 +22,7 @@ export function passengerExportRows(
   boardingPoints: BoardingPoint[],
 ): PassengerExportRow[] {
   return passengers
-    .filter((passenger) => passenger.status !== "cancelled")
+    .filter((passenger) => passenger.status !== "cancelled" && !passenger.anonymizedAt)
     .map((passenger) => ({
       fullName: passenger.fullName,
       documentType: passenger.documentType,

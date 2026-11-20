@@ -2,6 +2,11 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
+vi.mock("@/lib/repositories/audit", () => ({
+  insertAuditLog: vi.fn(async () => "audit-1"),
+  listAuditLog: vi.fn(async () => []),
+}));
+
 const state = vi.hoisted(() => {
   const AGENCY_A = "agency-A";
   const AGENCY_B = "agency-B";

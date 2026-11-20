@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { formatCpf, isCnpjDigits, isCpfDigits, isValidCnpj, isValidCpf } from "./document";
+import { formatCpf, formatDocument, formatDocumentMasked, isCnpjDigits, isCpfDigits, isValidCnpj, isValidCpf, maskCpf } from "./document";
 
 test("formats an 11-digit CPF and rejects other lengths", () => {
   expect(formatCpf("52998224725")).toBe("529.982.247-25");
@@ -23,4 +23,13 @@ test("accepts a CNPJ with valid check digits", () => {
   expect(isValidCnpj("11.444.777/0001-61")).toBe(true);
   expect(isValidCnpj("11444777000160")).toBe(false);
   expect(isValidCnpj("00000000000000")).toBe(false);
+});
+
+test("masks a CPF by default and keeps formatDocument full for official lists", () => {
+  expect(maskCpf("52998224725")).toBe("***.***.***-25");
+  expect(maskCpf("529.982.247-25")).toBe("***.***.***-25");
+  expect(formatDocumentMasked("cpf", "52998224725")).toBe("***.***.***-25");
+  expect(formatDocument("cpf", "52998224725")).toBe("529.982.247-25");
+  expect(formatDocumentMasked("rg", "12.345.678-9")).toBe("12.345.678-9");
+  expect(formatDocumentMasked("cpf", null)).toBe("Documento não informado");
 });

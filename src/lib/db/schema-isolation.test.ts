@@ -12,6 +12,10 @@ const migration2 = readFileSync(
   path.join(root, "db/migrations/0002_operacao.sql"),
   "utf8",
 );
+const migration3 = readFileSync(
+  path.join(root, "db/migrations/0003_lgpd.sql"),
+  "utf8",
+);
 
 const childTables = [
   "boarding_points",
@@ -82,6 +86,35 @@ describe("esquema multi-tenant", () => {
     expect(migration2).toContain("middle");
   });
 });
+
+  test("0003 adiciona auditoria, convites de staff e anonimização", () => {
+    for (const source of [schema, migration3]) {
+      expect(source).toContain("create table");
+      expect(source).toContain("audit_log");
+      expect(source).toContain("agency_invites");
+      expect(source).toContain("agency_id");
+      expect(source).toContain("user_id");
+      expect(source).toContain("anonymize_passenger");
+      expect(source).toContain("export_passenger");
+      expect(source).toContain("import_csv");
+      expect(source).toContain("export_antt");
+      expect(source).toContain("mark_paid");
+      expect(source).toContain("token_hash");
+      expect(source).toContain("expires_at");
+    }
+    expect(schema).toMatch(/create table audit_log \([\s\S]*unique \(id, agency_id\)/);
+    expect(schema).toMatch(/create table agency_invites \([\s\S]*unique \(id, agency_id\)/);
+    expect(schema).toContain("on audit_log (agency_id, created_at desc)");
+    expect(schema).toContain("anonymized_at timestamptz");
+    expect(migration3).toContain("add column if not exists anonymized_at");
+    expect(migration3).toContain("token_hash text not null unique");
+    const audit = extractTable(schema, "audit_log");
+    expect(audit.toLowerCase()).not.toContain("full_name");
+    expect(audit.toLowerCase()).not.toContain("document_number");
+    expect(audit.toLowerCase()).not.toContain("phone");
+    expect(audit.toLowerCase()).not.toContain("email");
+    expect(audit.toLowerCase()).not.toContain("cpf");
+  });
 
 function extractTable(sql: string, name: string): string {
   const start = sql.indexOf(`create table ${name} (`);

@@ -193,6 +193,7 @@ function person(id: string, fullName: string): Passenger {
     email: null,
     status: "confirmed",
     notes: null,
+    anonymizedAt: null,
     createdAt: "",
     updatedAt: "",
   };

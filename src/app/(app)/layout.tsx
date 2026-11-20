@@ -14,8 +14,10 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
+  let role: "owner" | "staff" = "staff";
   try {
-    await resolveTenantContext();
+    const context = await resolveTenantContext();
+    role = context.role;
   } catch (error) {
     if (
       isSecurityError(error) &&
@@ -52,7 +54,7 @@ export default async function AppLayout({
       <AppHeader
         attentionCount={attentionCount}
         agencyName={agencyName}
-        agencyHref="/agencia"
+        agencyHref={role === "owner" ? "/agencia" : null}
       />
       <main className="mx-auto w-full max-w-[1120px] px-5 pt-8 pb-16 lg:px-8">
         {children}
