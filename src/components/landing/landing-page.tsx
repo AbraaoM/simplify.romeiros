@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   NAME,
   PRICING,
@@ -155,7 +156,12 @@ function Hero() {
           computador.
         </p>
         <div className="mt-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-          <WhatsappCta>{trialCtaLabel()}</WhatsappCta>
+          <Link
+            href="/"
+            className="inline-flex min-h-11 items-center justify-center px-4 text-center transition-colors duration-300 bg-accent text-ink-soft hover:bg-accent-dark"
+          >
+            {trialCtaLabel()}
+          </Link>
           <p className="text-sm text-muted dark:text-faint">{trialLabel()}.</p>
         </div>
       </div>
@@ -310,10 +316,15 @@ function FinalCta() {
           Comece pelos {PRICING.trialDays} dias grátis.
         </h2>
         <p className="max-w-xl text-lg text-faint dark:text-muted">
-          Fale pelo WhatsApp para começar o teste com a sua agência —{" "}
+          Entre no sistema agora para começar o teste com a sua agência —{" "}
           {trialLabel()}.
         </p>
-        <WhatsappCta>{trialCtaLabel()}</WhatsappCta>
+        <Link
+          href="/"
+          className="inline-flex min-h-11 items-center justify-center px-4 text-center transition-colors duration-300 bg-accent text-ink-soft hover:bg-accent-dark"
+        >
+          {trialCtaLabel()}
+        </Link>
       </div>
     </section>
   );
