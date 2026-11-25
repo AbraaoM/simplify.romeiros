@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/shell/app-header";
 import { ErrorState } from "@/components/ui/error-state";
 import { todayInBrazil } from "@/lib/domain/dates";
@@ -14,18 +13,20 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  let role: "owner" | "staff" = "staff";
+  let role: "owner" | "staff" | "guest" = "guest";
+  let isAuthenticated = false;
   try {
     const context = await resolveTenantContext();
     role = context.role;
+    isAuthenticated = true;
   } catch (error) {
     if (
       isSecurityError(error) &&
       (error.code === "unauthenticated" || error.code === "unconfigured")
     ) {
-      redirect("/entrar");
-    }
-    if (
+      // Modo trial inicial: permite acesso sem login. Atividades que exigem conta serão definidas depois.
+      role = "guest";
+    } else if (
       isSecurityError(error) &&
       (error.code === "no_membership" || error.code === "ambiguous_membership")
     ) {
@@ -34,16 +35,17 @@ export default async function AppLayout({
           <ErrorState message="Não foi possível liberar o acesso desta conta." />
         </main>
       );
+    } else {
+      return (
+        <main className="mx-auto w-full max-w-[1120px] px-5 pt-8 pb-16 lg:px-8">
+          <ErrorState message="Não foi possível carregar o painel." />
+        </main>
+      );
     }
-    return (
-      <main className="mx-auto w-full max-w-[1120px] px-5 pt-8 pb-16 lg:px-8">
-        <ErrorState message="Não foi possível carregar o painel." />
-      </main>
-    );
   }
 
   const today = todayInBrazil();
-  const loaded = await loadAgencyData();
+  const loaded = isAuthenticated ? await loadAgencyData() : { ok: false as const, error: "unauthenticated" as const };
   const attentionCount = loaded.ok
     ? projectDueAttention(loaded.data, today).length
     : null;
@@ -53,7 +55,7 @@ export default async function AppLayout({
     <>
       <AppHeader
         attentionCount={attentionCount}
-        agencyName={agencyName}
+        agencyName={agencyName ?? (role === "guest" ? "Modo teste" : null)}
         agencyHref={role === "owner" ? "/agencia" : null}
       />
       <main className="mx-auto w-full max-w-[1120px] px-5 pt-8 pb-16 lg:px-8">
