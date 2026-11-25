@@ -38,10 +38,10 @@ export function LandingHeader() {
             Entrar
           </Link>
           <Link
-            href="/cadastrar"
+            href="/"
             className="inline-flex min-h-11 items-center bg-accent px-3 text-sm text-ink-soft sm:px-4"
           >
-            <span className="sm:hidden">Criar conta</span>
+            <span className="sm:hidden">Testar</span>
             <span className="hidden sm:inline">{trialCtaLabel()}</span>
           </Link>
           <ThemeToggle />
