@@ -50,13 +50,15 @@ export default async function AppLayout({
     ? projectDueAttention(loaded.data, today).length
     : null;
   const agencyName = loaded.ok ? (loaded.data.agency?.name ?? null) : null;
+  const isGuest = role === "guest";
 
   return (
     <>
       <AppHeader
         attentionCount={attentionCount}
-        agencyName={agencyName ?? (role === "guest" ? "Modo teste" : null)}
+        agencyName={agencyName ?? (isGuest ? "Modo teste" : null)}
         agencyHref={role === "owner" ? "/agencia" : null}
+        isGuest={isGuest}
       />
       <main className="mx-auto w-full max-w-[1120px] px-5 pt-8 pb-16 lg:px-8">
         {children}
