@@ -10,10 +10,12 @@ export function AppHeader({
   attentionCount,
   agencyName,
   agencyHref,
+  isGuest = false,
 }: {
   attentionCount: number | null;
   agencyName: string | null;
   agencyHref: string | null;
+  isGuest?: boolean;
 }) {
   const pathname = usePathname();
 
@@ -47,14 +49,23 @@ export function AppHeader({
               </span>
             ) : null}
           </NavLink>
-          <form action={signOutAction}>
-            <button
-              type="submit"
+          {isGuest ? (
+            <Link
+              href="/cadastrar"
               className="inline-flex min-h-11 items-center text-sm text-muted dark:text-faint"
             >
-              Sair
-            </button>
-          </form>
+              Criar conta
+            </Link>
+          ) : (
+            <form action={signOutAction}>
+              <button
+                type="submit"
+                className="inline-flex min-h-11 items-center text-sm text-muted dark:text-faint"
+              >
+                Sair
+              </button>
+            </form>
+          )}
           <ThemeToggle />
         </nav>
       </div>
