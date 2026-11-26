@@ -16,16 +16,17 @@ export default async function HomePage() {
         <div className="max-w-2xl">
           <h1 className="font-display text-4xl leading-tight">Modo teste — 14 dias grátis</h1>
           <p className="mt-4 text-lg text-muted dark:text-faint">
-            Você está no sistema sem login. Explore as telas. Para salvar dados, criar excursões e usar todas as funcionalidades de forma persistente, crie uma conta.
+            Você está no sistema sem login. Pode explorar as telas e até abrir o formulário de nova excursão. Para salvar qualquer dado de forma permanente, crie uma conta.
           </p>
-          <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+          <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
+            <PrimaryLink href="/excursoes/nova">Nova excursão</PrimaryLink>
             <PrimaryLink href="/cadastrar">Criar conta grátis</PrimaryLink>
             <Link href="/entrar" className="inline-flex min-h-11 items-center text-sm text-muted underline dark:text-faint">
               Já tenho conta
             </Link>
           </div>
           <p className="mt-8 text-sm text-muted dark:text-faint">
-            Nas próximas etapas vamos definir quais ações exigem criação de conta.
+            Nas próximas etapas vamos definir exatamente quais ações exigem criação de conta.
           </p>
         </div>
       );
